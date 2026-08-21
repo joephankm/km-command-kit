@@ -7,8 +7,8 @@
     /* App settings (utils for script) */
     "target": "ES2023",
     "lib": ["ES2023"],
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "types": ["node"],
     "noEmit": true
   },

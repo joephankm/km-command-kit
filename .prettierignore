@@ -1,0 +1,48 @@
+# 🚫 Ignore Files and Folders from Prettier formatting. <Last updated: 2025-07-04>
+# Docs: https://prettier.io/docs/ignore#ignoring-files-prettierignore  -- Prettier Ignore Configuration
+
+# ═════════════════════════════════════════════╗
+#                   General                    ║
+# ═════════════════════════════════════════════╝
+
+# Lock files (auto-generated)
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Logs (runtime output)
+*.log
+
+# Build artifacts (generated output)
+dist/
+build/
+coverage/
+
+# Compiled files (already optimized)
+*.min.js
+*.min.css
+
+# Binary and media assets (non-text)
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+
+# Environment files (often contain long or sensitive values)
+.env
+.env.*
+
+
+# ═════════════════════════════════════════════╗
+#               Project-specific               ║
+# ═════════════════════════════════════════════╝
+
+# HTML files (used mainly as entry points in frontend frameworks)
+**/*.html
+
+# Markdown files (manual formatting for readability and spacing)
+*.md
+
+# TypeScript configuration (may contains comments)
+tsconfig.json
