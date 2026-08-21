@@ -1,18 +1,28 @@
 {
   "name": "km-command-kit",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A well-structured set of command-line utilities and scripts (Node.js, Bash, Makefile, etc.)",
   "author": "Joe Phan",
   "scripts": {
     "hello": "tsx scripts/hello.ts",
-    "typeCheck": "tsc --noEmit"
+    "format": "prettier --write .",
+    "lint": "tsc -b --noEmit && eslint",
+    "prepare": "node .husky/install.mjs"
   },
   "dependencies": {
     "tsx": "^4.23.12"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^26.2.0",
-    "typescript": "^6.0.3"
+    "eslint": "^10.8.1",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.11.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.3.0",
+    "prettier": "^3.9.6",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.67.0"
   },
   "type": "module",
   "engines": {

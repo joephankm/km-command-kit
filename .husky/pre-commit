@@ -1,0 +1,9 @@
+# ♻️ Pre-Commit Hook — Executes before each `git commit`. <Last updated: 2026-03-06>
+# Docs:  https://typicode.github.io/husky/how-to.html
+# ----------------------------------------------------------------------------------
+# 📘 This hook helps catch issues early by running essential checks.
+# ❗ If any command fails, the commit will be aborted.
+# 🚫 To bypass the hook (not recommended), run: `git commit --no-verify`.
+
+# Run lint-staged to lint and format only staged files before commit
+pnpx lint-staged --verbose
