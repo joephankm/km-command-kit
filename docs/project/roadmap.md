@@ -26,29 +26,59 @@ Milestone
 
 ## 🗺️ Milestones
 
-### 🟡 V1 — Toolkit Foundation
+### 🚀 V1 — Node Script Foundation
 
-Build a reusable toolkit with utilities and a well-defined structure that can be easily copied into other projects.
+> Establish the foundation for running Node.js scripts in Node.js and frontend projects.
+>
+> **Goal:** Provide the structure, utilities, conventions, and supporting tools needed to develop and run reusable Node.js
+> scripts using JavaScript or TypeScript.
+>
+> **Status:** 🔵 Started
 
-**Goal:** Establish the core toolkit, utilities, conventions, and project structure needed to make the repository
-practical to reuse across projects.
+**🔵 Phase 1 — Establish Terminal Logging**
 
-**Status:** 🟡 Planned
+Build the core capabilities for styling, logging, and displaying information in the terminal.
 
-### 🔶 V2 — CLI Project Template
+| Step    | Name                             | Status       | Purpose                                                                                        |
+|---------|----------------------------------|--------------|------------------------------------------------------------------------------------------------|
+| `1.1.1` | Build Terminal Styling Utilities | 🟡 Planned   | Provide utilities for styling terminal output, such as text colors and value-based formatting. |
+| `1.1.2` | Implement Terminal Logger        | 🟡 Planned   | Provide a reusable logger for displaying structured information in the terminal.               |
+| `1.1.3` | Add Process Logging              | 🔷 Confirmed | Provide capabilities for displaying and tracking process information in the terminal.          |
+| `1.1.4` | Add Terminal Drawing             | 🔶 Idea      | Provide capabilities for drawing or rendering visual elements in the terminal.                 |
 
-Evolve the toolkit into a reusable project template for creating standalone CLI applications.
+**🟡 Phase 2 — Establish Terminal Logging**
 
-**Goal:** Allow developers to use this repository as a starting point for building standalone CLI tools (e.g. tools
-similar in structure and usage to `aws-cli`).
+**🟡 Phase 3 — Build Environment Configuration**
 
-Status: 🔶 Idea
+---
 
-### 🔶 V3 — Toolkit Automation
+## 📋 Backlog
 
-Enhance the toolkit with built-in automation that makes creating, managing, and maintaining projects easier.
+The following milestones are ideas for future development.
 
-**Goal:** Provide commands and workflows that automate common toolkit operations, such as generating a toolkit setup,
-creating a new CLI project from the template, and cleaning up or maintaining project files.
+### 🧠 Full Environment Command Toolkit
 
-**Status:** 🔶 Idea
+> Extend the toolkit beyond Node.js to support a broader command-line environment.
+> 
+> **Goal:** Add support for Bash scripts, Makefiles, and other environment-level tooling to provide a more complete
+> command toolkit.
+> 
+> **Status:** 🔶 Idea
+
+### 🧠 CLI Project Template
+
+> Evolve the toolkit into a reusable project template for creating standalone CLI applications.
+> 
+> **Goal:** Allow developers to use this repository as a starting point for building standalone CLI tools (e.g. tools
+> similar in structure and usage to `aws-cli`).
+> 
+> **Status:** 🔶 Idea
+
+### 🧠 Toolkit Automation
+
+> Enhance the toolkit with built-in automation that makes creating, managing, and maintaining projects easier.
+> 
+> **Goal:** Provide commands and workflows that automate common toolkit operations, such as generating a toolkit setup,
+> creating a new CLI project from the template, and cleaning up or maintaining project files.
+> 
+> **Status:** 🔶 Idea

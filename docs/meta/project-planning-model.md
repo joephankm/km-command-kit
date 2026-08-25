@@ -52,18 +52,27 @@ Work moves through a series of lifecycle stages as the project progresses.
 
 ### Stages
 
-| Stage             | Description                                                                                   |
-|-------------------|-----------------------------------------------------------------------------------------------|
-| **Brainstorming** | Exploring an idea, thinking through possibilities, and deciding whether it is worth pursuing. |
-| **In Progress**   | Planning and working on an idea that has been decided to move forward.                        |
-| **Completed**     | The planned work has been finished and its intended goal has been achieved.                   |
+| Stage             | Emoji | Description                                                |
+|-------------------|-------|------------------------------------------------------------|
+| **Brainstorming** | 🧠    | Ideas being explored and considered.                       |
+| **Planned**       | 🎯    | Selected for future implementation.                        |
+| **In Progress**   | 🚀    | Currently being planned or implemented.                    |
+| **Stabilization** | 🚧    | Completed implementation undergoing testing or refinement. |
+| **Completed**     | ✅    | Work that has been finished.                               |
 
 The typical progression is:
 
 ```text
-🧠 Brainstorming
+🧠 Brainstorming  (in Backlog)
        ↓
-🧰 In Progress
+🎯 Planned        (selected for next implementation)
+       ↓
+🚀 In Progress    (planning and working)
+       ├───────────┐
+       │           ↓
+       │     🧪 Stabilization   (testing and refinement)
+       │           │
+       ├───────────┘
        ↓
 ✅ Completed
 ```
@@ -74,11 +83,11 @@ The typical progression is:
 |--------------------|-------|---------------|-------------------------------------------------------------------------------------------|
 | **Idea**           | 🔶    | Brainstorming | An idea that has not yet been confirmed.                                                  |
 | **Confirmed**      | 🔷    | Brainstorming | An idea confirmed for further development.                                                |
-| **Planned**        | 🟡    | In Progress   | Planned and ready to start.                                                               |
+| **Ready**          | 🟡    | Planned       | Planned and ready to start.                                                               |
 | **Started**        | 🔵    | In Progress   | Work has started but is not yet ready to use.                                             |
 | **Usable**         | 🟢    | In Progress   | Ready to use, but still missing planned features.                                         |
 | **Blocked**        | 🔴    | In Progress   | Work cannot continue for now due to a blocking issue.                                     |
-| **Testing**        | 🟨    | Completed     | All features are complete and ready to use, but testing or minor fixes are still ongoing. |
+| **Testing**        | 🟨    | Stabilization | All features are complete and ready to use, but testing or minor fixes are still ongoing. |
 | **To Be Improved** | 🟦    | Completed     | Complete and ready to use, with improvements identified for later.                        |
 | **Stable**         | 🟩    | Completed     | Fully complete and no further work is currently expected.                                 |
 | **Deprecated**     | 🟥    | Completed     | No longer suitable for use and should not be used.                                        |
