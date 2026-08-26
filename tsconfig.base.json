@@ -1,5 +1,10 @@
 {
   "compilerOptions": {
+    /* Absolute Import */
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
     /* Type Checking */
     "strict": true,
     "noUncheckedIndexedAccess": true,

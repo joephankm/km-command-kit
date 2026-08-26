@@ -7,8 +7,8 @@
     /* Script settings */
     "target": "ES2023",
     "lib": ["ES2023"],
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "preserve",
+    "moduleResolution": "bundler",
     "types": ["node"],
     "noEmit": true
   },

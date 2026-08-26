@@ -1,10 +1,11 @@
 {
   "name": "km-command-kit",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A well-structured set of command-line utilities and scripts (Node.js, Bash, Makefile, etc.)",
   "author": "Joe Phan",
   "scripts": {
     "hello": "tsx scripts/hello.ts",
+    "smoke": "tsx scripts/dev/smoke.ts",
     "format": "prettier --write .",
     "lint": "tsc -b --noEmit && eslint",
     "prepare": "node .husky/install.mjs"

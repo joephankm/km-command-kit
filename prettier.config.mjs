@@ -14,6 +14,7 @@ const config = {
   tabWidth: 2,
   useTabs: false,
   printWidth: 120,
+  proseWrap: 'always',
   arrowParens: 'avoid',
   endOfLine: 'auto',
 

@@ -2,14 +2,14 @@
 
 This document defines the conventions used to organize, plan, and track work throughout the project.
 
-********
+---
 
 ## 🧱 Levels
 
 Each level represents a different scope of work, from a major project goal down to an individual unit of implementation.
 
 | Level         | Version | Description                                                                                                   |
-|---------------|---------|---------------------------------------------------------------------------------------------------------------|
+| ------------- | ------- | ------------------------------------------------------------------------------------------------------------- |
 | **Milestone** | `Major` | A major project goal. Completing a milestone represents a significant achievement for the repository.         |
 | **Phase**     | `Minor` | A focused goal within a milestone and a meaningful phase of the project.                                      |
 | **Step**      | `Patch` | A concrete implementation step within a phase. A step represents the smallest versioned unit of planned work. |
@@ -43,8 +43,7 @@ v1.1.1  → Step
           └── Tasks → Git commits
 ```
 
---------
-
+---
 
 ## ♻️ Lifecycle Stages
 
@@ -53,7 +52,7 @@ Work moves through a series of lifecycle stages as the project progresses.
 ### Stages
 
 | Stage             | Emoji | Description                                                |
-|-------------------|-------|------------------------------------------------------------|
+| ----------------- | ----- | ---------------------------------------------------------- |
 | **Brainstorming** | 🧠    | Ideas being explored and considered.                       |
 | **Planned**       | 🎯    | Selected for future implementation.                        |
 | **In Progress**   | 🚀    | Currently being planned or implemented.                    |
@@ -80,7 +79,7 @@ The typical progression is:
 ### Statuses
 
 | Status             | Emoji | Stage         | Meaning                                                                                   |
-|--------------------|-------|---------------|-------------------------------------------------------------------------------------------|
+| ------------------ | ----- | ------------- | ----------------------------------------------------------------------------------------- |
 | **Idea**           | 🔶    | Brainstorming | An idea that has not yet been confirmed.                                                  |
 | **Confirmed**      | 🔷    | Brainstorming | An idea confirmed for further development.                                                |
 | **Ready**          | 🟡    | Planned       | Planned and ready to start.                                                               |
