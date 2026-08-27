@@ -1,6 +1,6 @@
 {
   "name": "km-command-kit",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "A well-structured set of command-line utilities and scripts (Node.js, Bash, Makefile, etc.)",
   "author": "Joe Phan",
   "scripts": {

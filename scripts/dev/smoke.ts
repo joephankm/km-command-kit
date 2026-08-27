@@ -1,11 +1,10 @@
-import { style, styleCode } from '@/utils/shellStyle';
+import { configureLogger, logger } from '@/utils/shellLog';
 
-console.log(style.info('info message'));
-console.log(style.heading('heading text'));
-console.log(style.delete('delete text'));
+configureLogger({ verbose: true });
 
-console.log(styleCode('blue'));
-console.log(styleCode('redBg'));
-console.log(styleCode('bold', 'underline', 'cyan'));
-console.log(styleCode('resetAll'));
-console.log(styleCode('resetBoldOrDim'));
+logger.verbose('verbose message (hidden by default)');
+logger.info('info message');
+logger.warn('warn message');
+logger.error('error message', 'error detail');
+
+logger.verbose('verbose message (now enabled)', 'detail');

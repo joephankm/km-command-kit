@@ -5,7 +5,8 @@ import { ShellBackground, ShellColor, ShellDecoration, ShellReset } from '../con
  * resets.
  */
 export type ShellStyleName =
-  | Uncapitalize<keyof typeof ShellColor | `${keyof typeof ShellBackground}Bg` | keyof typeof ShellDecoration>
+  | Uncapitalize<keyof typeof ShellColor | keyof typeof ShellDecoration>
+  | `bg${keyof typeof ShellBackground}`
   | `reset${keyof typeof ShellReset}`;
 
 /**
@@ -32,7 +33,7 @@ const toCodeMap = (
  */
 const STYLE_CODE_MAP: Record<ShellStyleName, number> = {
   ...toCodeMap(ShellColor),
-  ...toCodeMap(ShellBackground, key => `${unCapitalize(key)}Bg`),
+  ...toCodeMap(ShellBackground, key => `bg${key}`),
   ...toCodeMap(ShellDecoration),
   ...toCodeMap(ShellReset, key => `reset${key}`),
 } as Record<ShellStyleName, number>;

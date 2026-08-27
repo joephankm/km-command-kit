@@ -39,12 +39,12 @@ Milestone
 
 Build the core capabilities for styling, logging, and displaying information in the terminal.
 
-| Step    | Name                             | Status       | Purpose                                                                                        |
-| ------- | -------------------------------- | ------------ | ---------------------------------------------------------------------------------------------- |
-| `1.1.1` | Build Terminal Styling Utilities | 🔵 Started   | Provide utilities for styling terminal output, such as text colors and value-based formatting. |
-| `1.1.2` | Implement Terminal Logger        | 🟡 Planned   | Provide a reusable logger for displaying structured information in the terminal.               |
-| `1.1.3` | Add Process Logging              | 🔷 Confirmed | Provide capabilities for displaying and tracking process information in the terminal.          |
-| `1.1.4` | Add Terminal Drawing             | 🔶 Idea      | Provide capabilities for drawing or rendering visual elements in the terminal.                 |
+| Step    | Name                             | Status     | Purpose                                                                                        |
+| ------- | -------------------------------- |------------| ---------------------------------------------------------------------------------------------- |
+| `1.1.1` | Build Terminal Styling Utilities | 🟢 Usable  | Provide utilities for styling terminal output, such as text colors and value-based formatting. |
+| `1.1.2` | Implement Terminal Logger        | 🔵 Started | Provide a reusable logger for displaying structured information in the terminal.               |
+| `1.1.3` | Add Process Logging              | 🟡 Planned | Provide capabilities for displaying and tracking process information in the terminal.          |
+| `1.1.4` | Add Terminal Drawing             | 🔶 Idea    | Provide capabilities for drawing or rendering visual elements in the terminal.                 |
 
 **🟡 Phase 2 — Establish Terminal Logging**
 

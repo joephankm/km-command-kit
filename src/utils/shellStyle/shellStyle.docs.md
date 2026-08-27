@@ -4,8 +4,8 @@ description:
   Terminal text styling via ANSI escape codes — semantic style presets plus a low-level
   color/decoration/background/reset code composer.
 labels: ['shell', 'ansi', 'terminal', 'style']
-version: 1.0.0
-updated: 2026-08-26
+version: 1.0.1
+updated: 2026-08-27
 ---
 
 # Shell Style
