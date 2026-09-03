@@ -4,7 +4,7 @@ description:
   Leveled terminal logging — styled per-level labels, aligned columns, an optional detail line, and a verbose mode
   hidden by default.
 labels: ['shell', 'terminal', 'log']
-version: 1.0.0
+version: 1.1.0
 updated: 2026-08-27
 ---
 
@@ -45,16 +45,16 @@ logger.verbose('Resolved 12 packages', 'lockfile: pnpm-lock.yaml'); // now print
 
 ## Exports (`index.ts`)
 
-| Export            | Source              | Description                                                                        |
-| ----------------- | ------------------- | ---------------------------------------------------------------------------------- |
-| `logger`          | `log/logger.ts`     | `Record<ShellLogLevel, ShellLogFunc>` (default export) — leveled logging functions |
-| `configureLogger` | `log/logger.ts`     | `(config: Partial<{ verbose: boolean }>) => void` — updates runtime config         |
-| `ShellLogLevel`   | `types/logTypes.ts` | Type: `'verbose' \| 'info' \| 'warn' \| 'error'`                                   |
-| `ShellLogFunc`    | `types/logTypes.ts` | Type: `(message: string, detail?: string) => void`                                 |
+| Export            | Source                   | Description                                                                        |
+| ----------------- | ------------------------ | ---------------------------------------------------------------------------------- |
+| `logger`          | `logger/simpleLogger.ts` | `Record<ShellLogLevel, ShellLogFunc>` (default export) — leveled logging functions |
+| `configureLogger` | `logger/simpleLogger.ts` | `(config: Partial<{ verbose: boolean }>) => void` — updates runtime config         |
+| `ShellLogLevel`   | `types/logTypes.ts`      | Type: `'verbose' \| 'info' \| 'warn' \| 'error'`                                   |
+| `ShellLogFunc`    | `types/logTypes.ts`      | Type: `(message: string, detail?: string) => void`                                 |
 
 ## Folder structure
 
 - `index.ts` — public entry point, re-exports `logger`, `configureLogger`, and the shared types.
 - `types/logTypes.ts` — shared types: `ShellLogLevel`, `ShellLogFunc`.
-- `log/logger.ts` — Logger component: builds the leveled `logger` (default export) and `configureLogger`, using
+- `logger/simpleLogger.ts` — Logger component: builds the leveled `logger` (default export) and `configureLogger`, using
   `shellStyle` for label, message, and detail styling.
