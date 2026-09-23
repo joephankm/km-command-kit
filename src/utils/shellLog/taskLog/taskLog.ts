@@ -1,388 +1,262 @@
-import { style } from '../../shellStyle';
-import taskLogConfig from '../configs/taskLogConfig';
-import type { TaskLogType } from '../configs/taskLogConfig';
+import { TaskLogLevel } from '../constants/taskLogConstants';
 import type {
-  TaskLogDoOptions,
+  TaskLogDoingOptions,
+  TaskLogDoneOptions,
   TaskLogFailOptions,
-  TaskLogFinishOptions,
-  TaskLogFlagMessage,
-  TaskLogFlagOptions,
-  TaskLogRenderOptions,
+  TaskLogOptions,
   TaskLogStartOptions,
-  TaskLogStepOptions,
+  TaskLogSubOptions,
+  TaskWideOptions,
 } from '../types/taskLogTypes';
-import logger from '../logger/simpleLogger';
+import { isDurationTime, resolveDisplayOptions, setTaskWideOptions } from './displayOptions';
+import { labelText, printLine, printMessage, stepText } from './printers';
+import messageBag, { MessageItem } from './messageBag';
 
 /**
- * The one running Job's state.
+ * Identifies the state associated with a task, action, or operation.
  */
-type JobState = {
-  /** The Job's name, printed by `start()` and used as `succeed()`'s last-resort fallback. */
-  job: string;
-  /** The Job's own deferred success note, surfaced only by a Job-scoped `succeed()`. */
-  pendingJobSuccessMessage?: string;
-  /** Job-level warnings queued by `flag()`, flushed by a Job-scoped finish call. */
-  pendingJobWarnings: Set<string>;
-  /** Job start timestamp, backing the Job's total duration. */
-  jobStartedAt: number;
-  /** Job-wide icon override; wins over every later call's own `icon` option. */
-  jobIcon?: string | false;
-  /** Job-wide format override; wins over every later call's own `format` option. */
-  jobFormat?: string | boolean;
-  /** How Task/Step timing is reported: elapsed time (`true`), wall-clock (`'logTime'`), or none. */
-  durationMode: boolean | 'logTime';
-  /** `start()`'s `totalSteps`, consumed when the implicit default Task is lazily created. */
-  defaultTotalSteps?: number;
+export type StateKey = TaskLogLevel | string;
+
+/**
+ * Mutable state maintained for one log level and process.
+ */
+export type ProcessState = {
+  /**
+   * Most recently logged step number.
+   */
+  currStep?: number;
+
+  /**
+   * Expected number of steps, used when rendering progress with a total.
+   */
+  stepTotals?: number;
+
+  /**
+   * Monotonic timestamp at which this level began, retained only when duration logging is enabled.
+   */
+  startTime?: number;
 };
 
 /**
- * One tracked Task's state, keyed by its `taskId` in `taskStates`.
+ * States for the current task run, indexed by level and optional process key.
  */
-type TaskState = {
-  /** The Task's name, printed by `do()` and used as a Task-scoped fallback message. */
-  task: string;
-  /** The Task's own deferred success note. */
-  pendingTaskSuccessMessage?: string;
-  /** The current Step's deferred success note. */
-  pendingStepSuccessMessage?: string;
-  /** Task-level warnings queued by `flag()`. */
-  pendingTaskWarnings: Set<string>;
-  /** Step-level warnings queued by `flag()`. */
-  pendingStepWarnings: Set<string>;
-  /** How many `step()` calls this Task has narrated. */
-  stepCount: number;
-  /** Expected step count for `Step N / Total` display. */
-  totalSteps?: number;
-  /** Task start timestamp; unset until `do()` has run for this Task. */
-  taskStartedAt?: number;
-  /** Current Step's start timestamp; unset until `step()` has run since the last reset. */
-  stepStartedAt?: number;
-};
+let processStates: Partial<Record<StateKey, ProcessState>> = {};
 
 /**
- * Key under which the implicit default Task (calls with no `taskId`) is tracked.
+ * Resolves the process identifier for an entry, preferring its explicit key over its display label.
  */
-const DEFAULT_TASK_ID = '';
+const getProcessKey = (options?: Pick<TaskLogOptions, 'processLabel' | 'processKey'>): string | undefined =>
+  options?.processKey ?? options?.processLabel;
 
 /**
- * The one running Job, or `undefined` when no Job has started.
+ * Produces a state key for a log level and optional process, keeping process state independent.
  */
-let jobState: JobState | undefined;
+const stateKeyOf = (level: TaskLogLevel, labelKey?: string): StateKey => (labelKey ? `${level}:${labelKey}` : level);
 
 /**
- * Every in-flight Task's state, keyed by `taskId`.
+ * Gets the state for a level and process, creating an empty state when none exists.
  */
-const taskStates = new Map<string, TaskState>();
+const getProcessState = (processKey: StateKey): ProcessState => (processStates[processKey] ??= {});
 
 /**
- * Resolves a `taskId` to its `TaskState`, lazily creating a fresh one on first use.
+ * Calculates elapsed durations for active levels up to the requested level.
  */
-const resolveTask = (taskId: string = DEFAULT_TASK_ID): TaskState => {
-  const existing = taskStates.get(taskId);
-  if (existing) return existing;
+const getDurations = (level: number, processKey?: string): Record<string, number> => {
+  const now = performance.now();
+  const durations: Record<string, number> = {};
+  const levelStates: [name: string, level: number, stateKey: StateKey][] = [
+    ['taskDuration', TaskLogLevel.Task, stateKeyOf(TaskLogLevel.Task)],
+    ['actionDuration', TaskLogLevel.Action, stateKeyOf(TaskLogLevel.Action, processKey)],
+    ['operationDuration', TaskLogLevel.Operation, stateKeyOf(TaskLogLevel.Operation, processKey)],
+  ];
 
-  const created: TaskState = {
-    task: taskId === DEFAULT_TASK_ID ? (jobState?.job ?? '') : taskId,
-    pendingTaskWarnings: new Set(),
-    pendingStepWarnings: new Set(),
-    stepCount: 0,
-    totalSteps: taskId === DEFAULT_TASK_ID ? jobState?.defaultTotalSteps : undefined,
-  };
-  taskStates.set(taskId, created);
-  return created;
-};
+  levelStates.forEach(([name, durationLevel, stateKey]) => {
+    const startTime = processStates[stateKey]?.startTime;
 
-/**
- * Renders one printable line for a type from its template, icon, and style.
- */
-const renderLine = (type: TaskLogType, message: string, options: TaskLogRenderOptions = {}): string => {
-  const config = taskLogConfig[type];
-  const format = jobState?.jobFormat ?? options.format;
-  if (format === false) return message;
-
-  const iconOption = jobState?.jobIcon ?? options.icon;
-  const icon =
-    iconOption === false
-      ? ''
-      : (iconOption ??
-        (options.preset !== undefined ? config.variants?.[options.preset]?.icon : undefined) ??
-        config.icon);
-
-  const template = typeof format === 'string' ? format : config.template;
-  const values: Record<string, string | undefined> = {
-    icon,
-    message: config.style(message),
-    step: options.step ?? '',
-    duration: options.duration === undefined ? '' : style.mute(` (${options.duration})`),
-  };
-
-  // An empty value also swallows the placeholder's trailing space (e.g. a suppressed `{icon} `).
-  return template.replace(/\{(\w+)}( ?)/g, (match, key: string, space: string) => {
-    const value = values[key];
-    if (value === undefined) return match;
-    return value === '' ? '' : value + space;
+    if (durationLevel <= level && startTime !== undefined) durations[name] = now - startTime;
   });
+
+  return durations;
 };
 
 /**
- * Formats an elapsed millisecond span for display, e.g. `320ms` or `4.2s`.
+ * Queues a success message until the corresponding log level is closed.
  */
-const elapsedText = (since: number): string => {
-  const ms = Date.now() - since;
-  return ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`;
+const pushMessage = (
+  successMessage: string,
+  level: TaskLogLevel,
+  options?: Pick<TaskLogOptions, 'processKey' | 'processLabel'>
+): void => {
+  messageBag.add(successMessage, 'success', level, getProcessKey(options));
 };
 
 /**
- * Formats the current wall-clock time for display, e.g. `14:32:05`.
+ * Converts an error into its printable message, allowing callers to supply a custom formatter.
  */
-const timeText = (): string => new Date().toTimeString().slice(0, 8);
+const errorMessage = (error: Error, formatError?: TaskLogFailOptions['formatError']): string => {
+  if (formatError) {
+    const formatted = formatError(error);
+    if (typeof formatted === 'string') return formatted;
 
-/**
- * Resolves a Task's/Step's timing text per the Job's duration mode; `undefined` prints nothing.
- */
-const segmentTimingText = (startedAt: number | undefined): string | undefined => {
-  const mode = jobState?.durationMode ?? true;
-  if (mode === false) return undefined;
-  if (mode === 'logTime') return timeText();
-  return startedAt === undefined ? undefined : elapsedText(startedAt);
-};
-
-/**
- * Prints one muted timing line, skipped when there's nothing to show.
- */
-const printTimingLine = (text: string | undefined, label?: string): void => {
-  if (text === undefined) return;
-  console.log(style.mute(label === undefined ? `  ⏱ ${text}` : `  ⏱ ${label}: ${text}`));
-};
-
-/**
- * Prints every pending warning in a Set as its own flag-formatted line, then clears the Set.
- */
-const flushWarnings = (warnings: Set<string>): boolean => {
-  const hadWarnings = warnings.size > 0;
-  for (const warning of warnings) console.warn(renderLine('flag', warning));
-  warnings.clear();
-  return hadWarnings;
-};
-
-/**
- * Flushes a level's pending warnings, or — only when there are none — its pending success message.
- */
-const flushLevel = (warnings: Set<string>, successMessage: string | undefined): void => {
-  if (flushWarnings(warnings)) return;
-  if (successMessage !== undefined) console.log(renderLine('succeed', successMessage));
-};
-
-/**
- * Flushes one Task's pending warnings, Step level first.
- */
-const flushTaskWarnings = (state: TaskState): void => {
-  flushWarnings(state.pendingStepWarnings);
-  flushWarnings(state.pendingTaskWarnings);
-};
-
-/**
- * Flushes every still-open Task's pending warnings (Step then Task), then the Job's own.
- */
-const flushAllWarnings = (): void => {
-  for (const state of taskStates.values()) flushTaskWarnings(state);
-  if (jobState) flushWarnings(jobState.pendingJobWarnings);
-};
-
-/**
- * A Task's still-pending success messages, innermost (Step) first.
- */
-const pendingTaskMessages = (state: TaskState): string[] =>
-  [state.pendingStepSuccessMessage, state.pendingTaskSuccessMessage].filter(
-    (message): message is string => message !== undefined
-  );
-
-/**
- * Prints each still-open Task's final timing line, then the Job's total elapsed duration.
- */
-const printFinalTimings = (): void => {
-  if (!jobState || jobState.durationMode === false) return;
-  for (const state of taskStates.values()) {
-    printTimingLine(segmentTimingText(state.stepStartedAt ?? state.taskStartedAt), state.task);
+    error = formatted;
   }
-  printTimingLine(elapsedText(jobState.jobStartedAt), 'Total');
+
+  return `${error.name}: ${error.message}`;
 };
 
 /**
- * Task narration logger: one Job per run, nested concurrent Tasks and sequential Steps, with
- * deferred success messages, accumulative warnings, and automatic duration tracking.
+ * Supported `done` call signatures: a completion message, options, both, or neither.
+ */
+type DoneFunc = {
+  (message?: string, options?: TaskLogDoneOptions): void;
+  (options?: TaskLogDoneOptions): void;
+};
+
+/**
+ * Logs the lifecycle of a task, including nested actions and operations.
  */
 const taskLog = {
   /**
-   * Begins the one Job: resets all state, prints the Job title line, starts the total timer.
+   * Starts a task run, prints its title, and applies task-wide display options to later entries.
    */
-  start: (job: string, options?: TaskLogStartOptions): void => {
-    jobState = {
-      job,
-      pendingJobSuccessMessage: options?.successMessage,
-      pendingJobWarnings: new Set(),
-      jobStartedAt: Date.now(),
-      jobIcon: options?.icon,
-      jobFormat: options?.format,
-      durationMode: options?.duration ?? true,
-      defaultTotalSteps: options?.totalSteps,
-    };
-    taskStates.clear();
-    console.log(renderLine('start', job, { icon: options?.icon, format: options?.format, preset: options?.kind }));
+  start(task: string, options?: TaskLogStartOptions, taskWideOptions?: Partial<TaskWideOptions>): void {
+    setTaskWideOptions(taskWideOptions);
+
+    if (options?.successMessage) pushMessage(options.successMessage, TaskLogLevel.Task, options);
+
+    const printOptions = resolveDisplayOptions('task', options);
+
+    if (printOptions.time === 'duration') getProcessState(stateKeyOf(TaskLogLevel.Task)).startTime = performance.now();
+
+    printLine(task, printOptions);
   },
 
   /**
-   * Begins (or restarts) a Task: flushes its previous pending output and timing, prints the new
-   * task line, then replaces that Task's state with a fresh one.
+   * Starts and prints an action within the active task.
    */
-  do: (task: string, options?: TaskLogDoOptions): void => {
-    const taskId = options?.taskId ?? DEFAULT_TASK_ID;
-    const previous = taskStates.get(taskId);
+  doing(action: string, options?: TaskLogDoingOptions): void {
+    const processKey = getProcessKey(options);
 
-    if (previous) {
-      flushLevel(previous.pendingStepWarnings, previous.pendingStepSuccessMessage);
-      flushLevel(previous.pendingTaskWarnings, previous.pendingTaskSuccessMessage);
-    }
-    printTimingLine(segmentTimingText(previous?.taskStartedAt));
+    messageBag
+      .popAll({ level: TaskLogLevel.Action, trackId: processKey })
+      .forEach(messageItem =>
+        printMessage(
+          messageItem,
+          isDurationTime() ? getDurations(messageItem[2] ?? TaskLogLevel.Action, processKey) : undefined
+        )
+      );
 
-    console.log(renderLine('do', task, { icon: options?.icon, format: options?.format }));
+    const lastOperationKey = stateKeyOf(TaskLogLevel.Operation, processKey);
+    if (processStates[lastOperationKey]) delete processStates[lastOperationKey];
 
-    taskStates.set(taskId, {
-      task,
-      pendingTaskSuccessMessage: options?.successMessage,
-      pendingTaskWarnings: new Set(),
-      pendingStepWarnings: new Set(),
-      stepCount: 0,
-      totalSteps: options?.totalSteps,
-      taskStartedAt: Date.now(),
+    const processState = getProcessState(stateKeyOf(TaskLogLevel.Action, processKey));
+    const printOptions = resolveDisplayOptions('action', options);
+
+    if (printOptions.time === 'duration') processState.startTime = performance.now();
+    if (options?.successMessage) pushMessage(options?.successMessage, TaskLogLevel.Action, options);
+
+    printLine(action, printOptions, {
+      step: options?.step ? stepText(options.step, printOptions, processState, options) : undefined,
+      label: options?.processLabel ? labelText(options.processLabel, printOptions) : undefined,
     });
   },
 
   /**
-   * Narrates a Task's next numbered Step: flushes the previous Step's pending output and timing,
-   * then prints the step line and stores its own deferred success note.
+   * Starts and prints an operation within the current action.
    */
-  step: (step: string, options?: TaskLogStepOptions): void => {
-    const state = resolveTask(options?.taskId);
-    flushLevel(state.pendingStepWarnings, state.pendingStepSuccessMessage);
-    printTimingLine(segmentTimingText(state.stepStartedAt));
+  sub(operation: string, options?: TaskLogSubOptions): void {
+    const lastMessageItem = messageBag.pop({ level: TaskLogLevel.Operation, trackId: getProcessKey(options) });
+    if (lastMessageItem) {
+      const durations = isDurationTime() ? getDurations(TaskLogLevel.Operation, getProcessKey(options)) : undefined;
 
-    state.stepCount += 1;
-    const stepText = state.totalSteps === undefined ? `${state.stepCount}` : `${state.stepCount} / ${state.totalSteps}`;
-    console.log(renderLine('step', step, { icon: options?.icon, format: options?.format, step: stepText }));
+      printMessage(lastMessageItem, durations);
+    }
 
-    state.pendingStepSuccessMessage = options?.successMessage;
-    state.stepStartedAt = Date.now();
+    const processState = getProcessState(stateKeyOf(TaskLogLevel.Operation, getProcessKey(options)));
+    const printOptions = resolveDisplayOptions('operation', options);
+
+    if (printOptions.time === 'duration') processState.startTime = performance.now();
+    if (options?.successMessage) pushMessage(options.successMessage, TaskLogLevel.Operation, options);
+
+    printLine(operation, printOptions, {
+      step: options?.step ? stepText(options.step, printOptions, processState, options) : undefined,
+      label: options?.processLabel ? labelText(options.processLabel, printOptions) : undefined,
+    });
   },
 
   /**
-   * Non-terminal: queues accumulative warnings for the Step/Task/Job levels; prints nothing
-   * itself — a queued warning supersedes that level's pending success message at its next flush.
+   * Completes the active task or a named process.
    */
-  flag: (message: TaskLogFlagMessage, options?: TaskLogFlagOptions): void => {
-    const warnings = typeof message === 'string' ? { step: message } : message;
-    const state = resolveTask(options?.taskId);
-    if (warnings.step !== undefined) state.pendingStepWarnings.add(warnings.step);
-    if (warnings.task !== undefined) state.pendingTaskWarnings.add(warnings.task);
-    if (warnings.job !== undefined) jobState?.pendingJobWarnings.add(warnings.job);
-  },
+  done: ((messageOrOptions?: string | TaskLogDoneOptions, doneOptions?: TaskLogDoneOptions) => {
+    const message = typeof messageOrOptions === 'string' ? messageOrOptions : undefined;
+    const options = typeof messageOrOptions === 'string' ? doneOptions : messageOrOptions;
+    const processKey = getProcessKey(options);
 
-  /**
-   * Terminal success: with `taskId`, ends just that Task; without, ends the whole Job — flushing
-   * pending warnings first, then surfacing pending success messages (or the given `message`),
-   * then the relevant duration(s). Exits with code `0` only if `exit: true`.
-   */
-  succeed: (message?: string, options?: TaskLogFinishOptions): void => {
-    const render: TaskLogRenderOptions = { icon: options?.icon, format: options?.format };
+    if (processKey) {
+      messageBag
+        .popAll({ level: TaskLogLevel.Action, trackId: processKey })
+        .forEach(messageItem =>
+          printMessage(
+            messageItem,
+            isDurationTime() ? getDurations(messageItem[2] ?? TaskLogLevel.Task, processKey) : undefined
+          )
+        );
 
-    if (options?.taskId !== undefined) {
-      const state = resolveTask(options.taskId);
-      flushTaskWarnings(state);
+      delete processStates[stateKeyOf(TaskLogLevel.Action, processKey)];
+      delete processStates[stateKeyOf(TaskLogLevel.Operation, processKey)];
 
-      const messages = message !== undefined ? [message] : pendingTaskMessages(state);
-      if (messages.length === 0) messages.push(state.task);
-      const timing = segmentTimingText(state.stepStartedAt ?? state.taskStartedAt);
-      messages.forEach((text, index) => {
-        const isLast = index === messages.length - 1;
-        console.log(renderLine('succeed', text, { ...render, duration: isLast ? timing : undefined }));
-      });
-      taskStates.delete(options.taskId);
-    } else {
-      if (taskStates.size > 1) {
-        logger.warn(`task.succeed() was called without a taskId while ${taskStates.size} Tasks are still open`);
-      }
-      flushAllWarnings();
+      if (Object.keys(processStates).some(processKey => processKey.includes(':'))) return;
+    }
 
-      const messages: string[] = [];
-      if (message !== undefined) {
-        messages.push(message);
+    let messageItems: (MessageItem | string)[] = messageBag.popAll();
+
+    if (message) {
+      if (options?.success !== undefined) {
+        messageItems = [options.success ? ['success', [message], TaskLogLevel.Task] : message];
       } else {
-        for (const state of taskStates.values()) messages.push(...pendingTaskMessages(state));
-        if (jobState?.pendingJobSuccessMessage !== undefined) {
-          messages.push(jobState.pendingJobSuccessMessage);
-        }
-        if (messages.length === 0 && jobState) messages.push(jobState.job);
+        const taskMessage = messageItems.find(([, , level]) => level === TaskLogLevel.Task);
+
+        if (taskMessage) (taskMessage as MessageItem)[1] = [message];
+        else messageItems.unshift(message);
       }
-      for (const text of messages) console.log(renderLine('succeed', text, render));
-
-      printFinalTimings();
-      taskStates.clear();
-      jobState = undefined;
     }
 
-    if (options?.exit === true) process.exit(0);
-  },
+    messageItems.forEach(messageItem =>
+      Array.isArray(messageItem)
+        ? printMessage(
+            messageItem,
+            isDurationTime() ? getDurations(messageItem[2]) : undefined,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
+            messageItem[2] === TaskLogLevel.Task ? options : undefined
+          )
+        : console.log(messageItem)
+    );
+
+    if (options?.exit) {
+      process.exit(0);
+    } else {
+      processStates = {};
+    }
+  }) as DoneFunc,
 
   /**
-   * Terminal failure: with `taskId`, ends just that Task; without, ends the whole Job — flushing
-   * pending warnings first, then printing `message` (or the Task's/Job's name) with the relevant
-   * duration(s); pending success messages are discarded. Exits with code `1` unless `exit: false`.
+   * Ends the task log with an error message.
    */
-  fail: (message?: string, options?: TaskLogFailOptions): void => {
-    const render: TaskLogRenderOptions = {
-      icon: options?.icon,
-      format: options?.format,
-      preset: options?.type,
-    };
+  fail(error: string | Error, options?: TaskLogFailOptions): void {
+    const message = typeof error === 'string' ? error : errorMessage(error, options?.formatError);
 
-    if (options?.taskId !== undefined) {
-      const state = resolveTask(options.taskId);
-      flushTaskWarnings(state);
-      const timing = segmentTimingText(state.stepStartedAt ?? state.taskStartedAt);
-      console.error(renderLine('fail', message ?? state.task, { ...render, duration: timing }));
-      taskStates.delete(options.taskId);
+    printMessage(
+      ['error', [message], TaskLogLevel.Task],
+      isDurationTime() ? getDurations(TaskLogLevel.Operation) : undefined,
+      options
+    );
+
+    if (options?.exit ?? true) {
+      process.exit(options?.exitCode ?? 1);
     } else {
-      flushAllWarnings();
-      console.error(renderLine('fail', message ?? jobState?.job ?? '', render));
-      printFinalTimings();
-      taskStates.clear();
-      jobState = undefined;
+      messageBag.popAll();
+      processStates = {};
     }
-
-    if (options?.exit !== false) process.exit(1);
-  },
-
-  /**
-   * Terminal neutral finish: with `taskId`, ends just that Task; without, ends the whole Job —
-   * flushing pending warnings first, printing `message` only if given, never any duration;
-   * pending success messages are discarded. Exits with code `0` only if `exit: true`.
-   */
-  done: (message?: string, options?: TaskLogFinishOptions): void => {
-    const render: TaskLogRenderOptions = { icon: options?.icon, format: options?.format };
-
-    if (options?.taskId !== undefined) {
-      const state = resolveTask(options.taskId);
-      flushTaskWarnings(state);
-      if (message !== undefined) console.log(renderLine('done', message, render));
-      taskStates.delete(options.taskId);
-    } else {
-      flushAllWarnings();
-      if (message !== undefined) console.log(renderLine('done', message, render));
-      taskStates.clear();
-      jobState = undefined;
-    }
-
-    if (options?.exit === true) process.exit(0);
   },
 };
 

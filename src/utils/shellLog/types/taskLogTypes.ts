@@ -1,96 +1,219 @@
+import type { ShellStyleFunc } from '../../shellStyle/types/styleTypes';
+
 /**
- * Every option any Task Log function accepts; each function's own options type picks the subset
- * it supports, so a shared option is declared and documented exactly once.
+ * [SHARED] Options that describe a task-log entry and its process.
  */
 export type TaskLogOptions = {
   /**
-   * Which concurrent Task this call targets. This should be
-   */
-  taskId?: string;
-
-  /**
-   * Deferred success note for the level this call opens, flushed at that level's next boundary.
+   * Success message displayed when this task-log entry completes.
    */
   successMessage?: string;
 
   /**
-   * Expected step count for the targeted Task's `Step N / Total` display.
+   * Progress step for the entry.
+   *
+   * - `true`: advances the current step counter.
+   * - `number`: uses the specified step number.
+   */
+  step?: number | true;
+
+  /**
+   * Total number of progress steps to display with `step`.
    */
   totalSteps?: number;
 
   /**
-   * Whether this call terminates the process after printing.
+   * Display label for the process associated with the entry.
+   */
+  processLabel?: string;
+
+  /**
+   * Identifier for the process associated with the entry.
+   * Defaults to `processLabel` and keeps concurrent processes distinct.
+   */
+  processKey?: string;
+};
+
+/**
+ * [SHARED] Options that control how a task-log result is handled.
+ */
+export type TaskResultOptions = {
+  /**
+   * Whether to exit the process after the result is logged.
    */
   exit?: boolean;
+};
+
+/**
+ * [SHARED] Options that control task-log output appearance.
+ */
+export type TaskDisplayOptions<Usage extends OptionUsage = 'perLine'> = {
+  /**
+   * Format used to render the entry.
+   *
+   * - `string`: uses a custom format with placeholders.
+   * - `true`: uses the predefined format.
+   * - `false`: prints the message without a format.
+   *
+   * For available placeholders, refer to
+   * {@link import('../constants/taskLogConstants').TaskLogFormatPlaceholder}
+   */
+  format?: ConfigurableType<string, Usage, { inConfig: true; taskWide: true; perLine: true }>;
 
   /**
-   * Raw icon override: a custom emoji to use as-is, or `false` to suppress the icon.
+   * Icon displayed with the entry.
+   *
+   * - `string`: uses the supplied icon.
+   * - `true`: uses the predefined icon.
+   * - `false`: hides the icon.
    */
-  icon?: string | false;
+  icon?: ConfigurableType<string, Usage, { inConfig: true; taskWide: true; perLine: true }>;
 
   /**
-   * Template override: a custom template string, or `false` to print the raw text only.
+   * Format used to render a process label.
+   *
+   * For available placeholders, refer to
+   * {@link import('../constants/taskLogConstants').TaskLogLabelPlaceholder}.
    */
-  format?: string | boolean;
+  labelFormat?: ConfigurableType<string, Usage, { inConfig: true }>;
 
   /**
-   * Job-wide timing mode: elapsed time (`true`, default), none (`false`), or `'logTime'`.
+   * Format used to render a progress step without a total.
+   *
+   * For available placeholders, refer to
+   * {@link import('../constants/taskLogConstants').TaskLogStepPlaceholder}.
    */
-  duration?: boolean | 'logTime';
+  stepFormat?: ConfigurableType<string, Usage, { inConfig: true }>;
+
+  /**
+   * Format used to render a progress step with a total.
+   *
+   * For available placeholders, refer to
+   * {@link import('../constants/taskLogConstants').TaskLogStepPlaceholder}.
+   */
+  stepWithTotalFormat?: ConfigurableType<string, Usage, { inConfig: true }>;
+
+  /**
+   * Time information displayed with the entry.
+   */
+  time?: ConfigurableType<TaskLogTime, Usage, { taskWide: true }, TaskLogTime>;
+
+  /**
+   * Wall-clock time format used when `time` is `'logTime'`.
+   */
+  logTimeFormat?: ConfigurableType<string, Usage, { inConfig: true }>;
+
+  /**
+   * Elapsed-duration format used when `time` is `'duration'`.
+   *
+   * For available placeholders, refer to
+   * {@link import('../constants/taskLogConstants').TaskLogDurationPlaceholder}.
+   */
+  durationFormat?: ConfigurableType<string, Usage, { inConfig: true }>;
+
+  /**
+   * Shell style applied to the rendered entry.
+   */
+  style?: ConfigurableType<ShellStyleFunc, Usage, { inConfig: true }>;
 };
 
 /**
- * Options for `start()`, whose `totalSteps` and `duration` apply Job-wide.
+ * Resolved display options shared by a task-log run.
  */
-export type TaskLogStartOptions = Pick<
-  TaskLogOptions,
-  'icon' | 'format' | 'successMessage' | 'totalSteps' | 'duration'
-> & {
-  /** Named icon preset from `taskLogConfig.start.variants`. */
-  kind?: 'create' | 'delete';
-};
+export type TaskWideOptions = Pick<TaskDisplayOptions<'taskWide'>, 'icon' | 'format' | 'time'> &
+  Pick<
+    TaskDisplayOptions<'inConfig'>,
+    'labelFormat' | 'stepFormat' | 'stepWithTotalFormat' | 'logTimeFormat' | 'durationFormat'
+  >;
 
 /**
- * Options for `do()`.
+ * Resolved display options used to print one task-log entry.
  */
-export type TaskLogDoOptions = Pick<TaskLogOptions, 'icon' | 'format' | 'successMessage' | 'totalSteps' | 'taskId'>;
+export type PrintOptions = Omit<TaskWideOptions, 'format' | 'icon'> &
+  Pick<TaskDisplayOptions<'inConfig'>, 'style'> &
+  Pick<TaskDisplayOptions<'perLine'>, 'format' | 'icon'>;
 
 /**
- * Options for `step()`.
+ * Names of the predefined task-log display formats.
  */
-export type TaskLogStepOptions = Pick<TaskLogOptions, 'icon' | 'format' | 'successMessage' | 'taskId'>;
+export type TaskLogFormatName =
+  'task' | 'action' | 'operation' | 'taskSuccess' | 'actionSuccess' | 'operationSuccess' | 'error';
 
 /**
- * Warning messages for up to three levels at once; a plain string targets the Step level only.
+ * Available time display modes for a task-log entry.
  */
-export type TaskLogFlagMessage = string | { step?: string; task?: string; job?: string };
+export type TaskLogTime = 'logTime' | 'duration';
 
 /**
- * Options for `flag()`, which only needs to know which Task it queues against.
+ * Context in which a display option may be supplied.
  */
-export type TaskLogFlagOptions = Pick<TaskLogOptions, 'taskId'>;
+type OptionUsage =
+  // In configuration, as the default for every task-log run.
+  | 'inConfig'
+  // On `start()`, for the task and all nested entries.
+  | 'taskWide'
+  // On one action or operation entry.
+  | 'perLine';
 
 /**
- * Options shared by the three finish functions.
+ * [UTIL] Resolves an option's allowed type for its usage context.
  */
-export type TaskLogFinishOptions = Pick<TaskLogOptions, 'icon' | 'format' | 'taskId' | 'exit'>;
+type ConfigurableType<
+  Type,
+  Usage extends OptionUsage,
+  Rules extends Partial<Record<OptionUsage, boolean>>,
+  TaskWideType = boolean,
+> = Rules[Usage] extends true
+  ? Usage extends 'inConfig'
+    ? Type
+    : Usage extends 'taskWide'
+      ? TaskWideType
+      : Type | boolean
+  : never;
 
 /**
- * Options for `fail()`.
+ * Options for `start()`, which begins a task-log run.
  */
-export type TaskLogFailOptions = TaskLogFinishOptions & {
-  /** Named icon preset from `taskLogConfig.fail.variants`. */
-  type?: 'validation' | 'notFound';
-};
+export type TaskLogStartOptions = Pick<TaskLogOptions, 'successMessage' | 'processLabel'> & TaskDisplayOptions;
 
 /**
- * Per-call inputs the line renderer resolves against the Job-wide overrides and the config.
+ * Options for `doing()`, which logs an action.
  */
-export type TaskLogRenderOptions = Pick<TaskLogOptions, 'icon' | 'format'> & {
-  /** Named icon preset (`kind`/`type`) from the call. */
-  preset?: string;
-  /** Pre-computed `{step}` display text. */
-  step?: string;
-  /** Pre-computed `{duration}` display text — unlike the option of the same name, already resolved. */
-  duration?: string;
-};
+export type TaskLogDoingOptions = TaskLogOptions & TaskDisplayOptions;
+
+/**
+ * Options for `sub()`, which logs an operation.
+ */
+export type TaskLogSubOptions = TaskLogOptions & TaskDisplayOptions;
+
+/**
+ * Options for `done()`, which completes a task or process.
+ */
+export type TaskLogDoneOptions = TaskResultOptions &
+  TaskDisplayOptions &
+  Pick<TaskLogOptions, 'processLabel' | 'processKey'> & {
+    /**
+     * Determines how a message passed directly to `done()` is displayed.
+     * When set, `true` uses success formatting and `false` uses plain output.
+     */
+    success?: boolean;
+  };
+
+/**
+ * Options for `fail()`, which ends a task-log run with an error.
+ */
+export type TaskLogFailOptions = TaskResultOptions &
+  TaskDisplayOptions & {
+    /**
+     * Custom formatter for an `Error` passed to `fail()`.
+     * Return a string for the displayed message or an `Error` for default formatting.
+     */
+    formatError?: (error: Error) => string | Error;
+
+    /**
+     * Process exit code used when `exit` is enabled.
+     *
+     * @default 1
+     */
+    exitCode?: number;
+  };

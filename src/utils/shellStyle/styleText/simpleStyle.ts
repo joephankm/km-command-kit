@@ -10,7 +10,7 @@ const styleFunc = (open: number | string, close: number | string): ShellStyleFun
   const closeCode = `\u001B[${close}m`;
 
   // [!PERFORMANCE]: Not using template literals for performance reasons
-  return text => openCode + text + closeCode;
+  return text => (text ? openCode + text + closeCode : openCode);
 };
 
 /**

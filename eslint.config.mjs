@@ -8,6 +8,20 @@ export default defineConfig(
   {
     files: ['**/*.{js,ts}'],
     extends: [js.configs.recommended, tseslint.configs.recommendedTypeChecked, eslintConfigPrettier],
+    rules: {
+      // Override: allow leading underscore
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          args: 'after-used',
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+          destructuredArrayIgnorePattern: '^_',
+          ignoreRestSiblings: true,
+        },
+      ],
+    },
   },
   {
     files: ['src/**/*.ts'],

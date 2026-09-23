@@ -1,54 +1,69 @@
 import { style } from '../../shellStyle';
-import type { ShellStyleFunc } from '../../shellStyle/types/styleTypes';
+import type { TaskDisplayOptions, TaskLogFormatName } from '../types/taskLogTypes';
 
 /**
- * Line types the Task Log component can print, one per `taskLog` function.
+ * The display every run starts from, before `start` or an individual call overrides anything.
  */
-export type TaskLogType = 'start' | 'do' | 'step' | 'succeed' | 'fail' | 'done' | 'flag';
-
-/**
- * A named icon preset for a Task Log type.
- */
-export type TaskLogVariant = {
-  /** Emoji replacing the type's default icon. */
-  icon: string;
+const taskLogSettings: TaskDisplayOptions<'taskWide'> = {
+  icon: true,
+  format: true,
+  time: 'duration',
 };
 
 /**
- * A Task Log type's full display configuration.
+ * The base display for each of the seven formats — the level every other level falls back to.
  */
-export type TaskLogTypeConfig = {
-  /** Default emoji printed as the line's prefix. */
-  icon: string;
-  /** Style wrapping the `{message}` placeholder. */
-  style: ShellStyleFunc;
-  /** The printed line's shape, built from `{icon}`/`{message}`/`{step}`/`{duration}` placeholders. */
-  template: string;
-  /** Named icon presets selectable per call. */
-  variants?: Record<string, TaskLogVariant>;
-};
-
-/**
- * [CONFIG]: Task Log display configuration — icon, style, and line template per line type.
- */
-const taskLogConfig: Record<TaskLogType, TaskLogTypeConfig> = {
-  start: {
+const taskLogFormats: Record<'base' | TaskLogFormatName, TaskDisplayOptions<'inConfig'>> = {
+  /** Used as the default for every other format below, which only override what differs. */
+  base: {
+    labelFormat: '[{label}] ',
+    stepFormat: 'Step {step}: ',
+    stepWithTotalFormat: 'Step {step} / {totalSteps}: ',
+    logTimeFormat: 'HH:mm:ss ',
+    durationFormat: style.reset() + '  ⏰ {taskDuration}',
+  },
+  task: {
+    format: '{logTime}{icon} {message}',
     icon: '🚀',
     style: style.title,
-    template: '{icon} {message}',
-    variants: { create: { icon: '➕' }, delete: { icon: '☠️' } },
   },
-  do: { icon: '🔧', style: style.label, template: '{icon} {message}' },
-  step: { icon: '🔹', style: style.label, template: '  {icon} Step {step}: {message}' },
-  succeed: { icon: '✅', style: style.success, template: '{icon} {message}{duration}' },
-  fail: {
+  action: {
+    format: '{logTime}{icon} {step}{label}{message}',
+    icon: '🎯',
+    style: style.heading,
+  },
+  operation: {
+    format: '  {logTime}{icon} {step}{label}{message} ',
+    icon: '🔹',
+    stepFormat: '[ {step} ] ',
+    stepWithTotalFormat: '[ {step} / {totalSteps} ] ',
+    style: style.subtle,
+  },
+  taskSuccess: {
+    format: '{logTime}{icon} [SUCCESS] {message} {duration}',
+    icon: '✅',
+    style: style.success,
+  },
+  actionSuccess: {
+    format: '{logTime}{icon} {message} {duration}\n',
+    icon: '🟢',
+    durationFormat: style.reset() + '(in {actionDuration})   ⏰ {taskDuration}',
+    style: style.success,
+  },
+  operationSuccess: {
+    format: '  {icon} {message} {duration}',
+    icon: '☑️',
+    durationFormat: style.reset() + '({operationDuration})',
+    style: style.success,
+  },
+  error: {
+    format: '{icon} [FAILED] {message} {duration}{logTime}',
     icon: '❌',
     style: style.error,
-    template: '{icon} {message}{duration}',
-    variants: { validation: { icon: '⚠️' }, notFound: { icon: '🔍' } },
   },
-  done: { icon: '🏁', style: style.label, template: '{icon} {message}' },
-  flag: { icon: '⚠️', style: style.warn, template: '{icon} {message}' },
 };
 
-export default taskLogConfig;
+export default {
+  settings: taskLogSettings,
+  formats: taskLogFormats,
+};

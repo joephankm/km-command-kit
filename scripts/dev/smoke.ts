@@ -1,56 +1,35 @@
-import { task } from '@/utils/shellLog';
+import taskLog from '@/utils/shellLog/taskLog/taskLog';
 
 /**
- * Pause helper so elapsed durations are visibly non-zero.
+ * Holds the run up for a moment, so the durations printed below are not all zero.
  */
-const sleep = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
+const wait = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
 
-// --- Job 1: implicit single Task, deferred messages, flags, then concurrent Tasks ---
-task.start('Build toolkit', { totalSteps: 3, successMessage: 'Toolkit build finished' });
+console.log('===== durations on every line that closes a level =====\n');
 
-task.step('Compile sources', { successMessage: 'Sources compiled' });
-await sleep(120);
-task.step('Bundle output', { successMessage: 'Output bundled' }); // flushes "Sources compiled"; Steps show a duration only from here on
-await sleep(80);
-task.flag('bundle upload retried');
-task.flag('bundle upload retried'); // duplicate — must collapse to one printed line
-task.step('Write manifest'); // prints the flag line INSTEAD of "Output bundled"
-await sleep(60);
+taskLog.start('Release the toolkit', { successMessage: 'Toolkit released' });
 
-task.do('Generate types', { totalSteps: 2, successMessage: 'Types generated' }); // first do() — no Task duration yet
-await sleep(50);
-task.step('Scan entry points');
-await sleep(50);
-task.step('Emit declarations');
-await sleep(50);
-task.flag({ task: 'type generation reused a stale cache' });
-task.do('Copy assets', { successMessage: 'Assets copied' }); // prints the Task-level flag INSTEAD of "Types generated", plus the Task's duration
-await sleep(50);
+taskLog.doing('Build the bundle', { step: true, totalSteps: 2, successMessage: 'Bundle built' });
+taskLog.sub('Compile the sources', { step: true, successMessage: 'Done' });
+await wait(120);
+taskLog.sub('Write the manifest', { step: true, successMessage: 'Done' });
+await wait(60);
 
-task.do('Upload assets', { taskId: 'upload', successMessage: 'Assets uploaded' });
-task.do('Run migrations', { taskId: 'migrate', successMessage: 'Migrations applied' });
-task.do('Warm caches', { taskId: 'cache' });
-await sleep(70);
-task.step('Push to CDN', { taskId: 'upload' });
-await sleep(40);
-task.succeed('Upload finished', { taskId: 'upload' }); // ends only that Task; the other Tasks and the Job keep running
-await sleep(40);
-task.flag({ job: 'ran with degraded network' });
-task.succeed(); // ambiguous (3 Tasks still open): warns via logger, flushes the Job flag, surfaces every pending message, then per-Task durations + total
+taskLog.doing('Upload the bundle', { step: true, successMessage: 'Bundle uploaded' });
+await wait(200);
 
-// --- Job 2: quiet neutral finish ---
-task.start('Inspect environment', { kind: 'create' });
-task.do('Check node version');
-await sleep(30);
-task.done(); // no message, no duration — just ends the Job
+taskLog.done();
 
-// --- Job 3: logTime mode ---
-task.start('Nightly report', { duration: 'logTime', successMessage: 'Report generated' });
-task.do('Collect metrics'); // timestamp shows even on the FIRST do(), unlike elapsed mode
-await sleep(60);
-task.do('Render summary');
-await sleep(60);
-task.succeed(); // Task lines show timestamps; the Job total is still a real elapsed duration
+console.log('\n===== durations on a failed run =====\n');
 
-// Not demonstrated here because each terminates the process before later scenarios could run:
-// fail() (exits 1 by default), and succeed()/done() with { exit: true } (exit 0).
+taskLog.start('Release the toolkit', { successMessage: 'Toolkit released' });
+taskLog.doing('Build the bundle', { step: true, successMessage: 'Bundle built' });
+await wait(90);
+taskLog.fail('The bundle did not build', { exit: false });
+
+console.log('\n===== a run logging wall-clock time instead =====\n');
+
+taskLog.start('Release the toolkit', { successMessage: 'Toolkit released' }, { time: 'logTime' });
+taskLog.doing('Build the bundle', { step: true, successMessage: 'Bundle built' });
+await wait(50);
+taskLog.done();
