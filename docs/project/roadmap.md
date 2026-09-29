@@ -35,7 +35,7 @@ Milestone
 >
 > **Status:** 🔵 Started
 
-**🟢 Phase 1 — Establish Terminal Logging**
+**🟨 Phase 1 — Establish Terminal Logging**
 
 Build the core capabilities for styling, logging, and displaying information in the terminal.
 
@@ -44,9 +44,12 @@ Build the core capabilities for styling, logging, and displaying information in 
 | `1.1.1` | Build Terminal Styling Utilities | 🟢 Usable | Provide utilities for styling terminal output, such as text colors and value-based formatting. |
 | `1.1.2` | Implement Terminal Logger        | 🟢 Usable | Provide a reusable logger for displaying structured information in the terminal.               |
 | `1.1.3` | Add Process Logging              | 🟢 Usable | Provide capabilities for displaying and tracking process information in the terminal.          |
-| `1.1.4` | Add Terminal Drawing             | 🔶 Idea   | Provide capabilities for drawing or rendering visual elements in the terminal.                 |
+| `1.1.4` | Add Terminal Drawing             | 🟢 Usable | Provide capabilities for drawing or rendering visual elements in the terminal.                 |
 
-**🟡 Phase 2 — Establish Terminal Logging**
+**🟡 Phase 2 — Establish Command Line Interface**
+
+Build the capabilities for processing the command line — reading arguments and options, and presenting usage
+information.
 
 **🟡 Phase 3 — Build Environment Configuration**
 

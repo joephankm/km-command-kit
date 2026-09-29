@@ -1,35 +1,18 @@
-import taskLog from '@/utils/shellLog/taskLog/taskLog';
+import { draw, style, styleCode } from '@/utils/shellStyle';
 
-/**
- * Holds the run up for a moment, so the durations printed below are not all zero.
- */
-const wait = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
+console.log('--- styling');
+console.log(style.info('Info message'));
+console.log(style.emphasize('bold ' + style.error('and red') + ' still bold'));
+console.log(JSON.stringify(style.border()), JSON.stringify(style.title('Report', style.border())));
+console.log(styleCode('bold', 'underline', 'cyan'), styleCode('bgRed'), styleCode('resetColor'));
 
-console.log('===== durations on every line that closes a level =====\n');
+console.log('--- drawing');
+draw.line(23, { title: 'Report' });
 
-taskLog.start('Release the toolkit', { successMessage: 'Toolkit released' });
+const box = draw.buildBox([12, 8], { thickOutline: true });
 
-taskLog.doing('Build the bundle', { step: true, totalSteps: 2, successMessage: 'Bundle built' });
-taskLog.sub('Compile the sources', { step: true, successMessage: 'Done' });
-await wait(120);
-taskLog.sub('Write the manifest', { step: true, successMessage: 'Done' });
-await wait(60);
-
-taskLog.doing('Upload the bundle', { step: true, successMessage: 'Bundle uploaded' });
-await wait(200);
-
-taskLog.done();
-
-console.log('\n===== durations on a failed run =====\n');
-
-taskLog.start('Release the toolkit', { successMessage: 'Toolkit released' });
-taskLog.doing('Build the bundle', { step: true, successMessage: 'Bundle built' });
-await wait(90);
-taskLog.fail('The bundle did not build', { exit: false });
-
-console.log('\n===== a run logging wall-clock time instead =====\n');
-
-taskLog.start('Release the toolkit', { successMessage: 'Toolkit released' }, { time: 'logTime' });
-taskLog.doing('Build the bundle', { step: true, successMessage: 'Bundle built' });
-await wait(50);
-taskLog.done();
+box.top();
+box.row(['Name', 'Size'], { style: style.title });
+box.mid();
+box.row(['a.ts', { content: '4 KB', align: 'right' }]);
+box.bot();

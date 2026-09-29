@@ -3,18 +3,32 @@ import type { ShellStyleName } from '../configs/styleConfig';
 import type { ShellStyleFunc } from '../types/styleTypes';
 
 /**
- * Creates a ShellStyleFunc that wraps text between a fixed start code and end code.
+ * Escape character that begins an ANSI control sequence.
  */
-const styleFunc = (open: number | string, close: number | string): ShellStyleFunc => {
-  const openCode = `\u001B[${open}m`;
-  const closeCode = `\u001B[${close}m`;
+const ESC = '\u001B';
 
-  // [!PERFORMANCE]: Not using template literals for performance reasons
-  return text => (text ? openCode + text + closeCode : openCode);
+/**
+ * Creates a style function that opens with one SGR code and closes with another.
+ */
+const styleFunc = (openStyle: number | string, closeStyle: number | string): ShellStyleFunc => {
+  const openCode = `${ESC}[${openStyle}m`;
+  const closeCode = `${ESC}[${closeStyle}m`;
+
+  return (text, close) => {
+    if (text === undefined) return openCode;
+
+    if (close) {
+      const givenCode = typeof close === 'string' && close.startsWith(ESC) ? close : ESC + '[' + close + 'm';
+      return openCode + text + givenCode;
+    }
+
+    // [!PERFORMANCE]: Not using template literals for performance reasons
+    return openCode + text + closeCode;
+  };
 };
 
 /**
- * Precomputed style function for every named style in styleConfig.
+ * Style functions generated from every named entry in `styleConfig`.
  */
 const style: Record<ShellStyleName, ShellStyleFunc> = Object.fromEntries(
   Object.entries(config.style).map(([name, [open, close]]) => [name, styleFunc(open, close)])

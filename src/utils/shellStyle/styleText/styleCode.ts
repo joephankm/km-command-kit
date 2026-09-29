@@ -1,8 +1,8 @@
 import { ShellBackground, ShellColor, ShellDecoration, ShellReset } from '../constants/shellStyleCodes';
 
 /**
- * Any style name resolvable to an ANSI SGR code, across colors, backgrounds, decorations, and
- * resets.
+ * A supported name that resolves to an ANSI SGR parameter for a color, background, decoration, or
+ * reset.
  */
 export type ShellStyleName =
   | Uncapitalize<keyof typeof ShellColor | keyof typeof ShellDecoration>
@@ -10,13 +10,14 @@ export type ShellStyleName =
   | `reset${keyof typeof ShellReset}`;
 
 /**
- * Lowercases only the first character of a key, e.g. `Red` becomes `red`.
+ * Converts an enum key to camel-style casing by lowercasing its first character (`Red` → `red`).
  */
 const unCapitalize = (key: string): string => `${key.charAt(0).toLowerCase()}${key.slice(1)}`;
 
 /**
- * Builds a code map from an SGR enum, keyed by each enum key run through `mapKey` (default:
- * lowercase the first character only) so callers can prefix or suffix the key as needed.
+ * Builds a lookup from an SGR enum, transforming each key with `mapKey` before storing its numeric
+ * code. By default, only the first character is lowercased; callers can provide a mapper to add a
+ * prefix or otherwise rename keys.
  */
 const toCodeMap = (
   enumObject: Record<string, number | string>,
@@ -29,7 +30,7 @@ const toCodeMap = (
   );
 
 /**
- * Style name to ANSI code mapping
+ * Maps each supported style name to its numeric ANSI SGR parameter.
  */
 const STYLE_CODE_MAP: Record<ShellStyleName, number> = {
   ...toCodeMap(ShellColor),
@@ -39,6 +40,6 @@ const STYLE_CODE_MAP: Record<ShellStyleName, number> = {
 } as Record<ShellStyleName, number>;
 
 /**
- * [TRAN] Transforms multiple style names into a single ANSI SGR code, joined by `;`.
+ * Converts style names into an SGR parameter string, joining their numeric codes with semicolons.
  */
 export const styleCode = (...names: ShellStyleName[]): string => names.map(name => STYLE_CODE_MAP[name]).join(';');

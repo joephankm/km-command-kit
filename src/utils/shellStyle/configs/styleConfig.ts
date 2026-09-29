@@ -1,64 +1,76 @@
 import type { ShellTextStyle } from '../types/styleTypes';
 
-/** Log-level style names, mirroring the Levels feature (verbose/info/warn/error). */
+/** Styles for informational, verbose, warning, error, and secondary log messages. */
 type ShellLogLevelStyleName = 'info' | 'verbose' | 'warn' | 'error' | 'side';
 
-/** Status style names — the outcome/state of something ongoing (task, process, etc.). */
+/** Styles for success, warning, and error statuses. */
 type ShellStatusStyleName = 'success' | 'warn' | 'error';
 
-/** Action style names for emphasizing or de-emphasizing a specific piece of text. */
+/** Styles for highlighting, emphasizing, removing, muting, or attaching text. */
 type ShellActionStyleName = 'highlight' | 'emphasize' | 'delete' | 'mute' | 'attach';
 
-/** Title-level style names for section headings of varying prominence. */
+/** Styles for titles, headings, labels, and other levels of text prominence. */
 type ShellTitleStyleName =
-  // Title
+  // Primary title.
   | 'title'
-  // Second title, Description
+  // Secondary title or description.
   | 'subtitle'
-  // Heading, article, table name
+  // Section, article, or table heading.
   | 'heading'
-  // Input label, table main column
+  // Input label or primary table column.
   | 'label'
-  // non-important heading
+  // Low-prominence heading.
   | 'subtle';
 
-/** Style names based on inherent nature rather than purpose, e.g. resetting all styling. */
+/** Styles used for structural elements such as borders. */
+type ShellStructureStyleName = 'border';
+
+/** Styles that describe a general formatting operation, such as resetting all styles. */
 export type ShellNatureStyleName = 'reset';
 
 /**
- * Define style names
+ * All semantic style names supported by this configuration.
  */
 export type ShellStyleName =
-  ShellLogLevelStyleName | ShellStatusStyleName | ShellActionStyleName | ShellTitleStyleName | ShellNatureStyleName;
+  | ShellLogLevelStyleName
+  | ShellStatusStyleName
+  | ShellActionStyleName
+  | ShellTitleStyleName
+  | ShellStructureStyleName
+  | ShellNatureStyleName;
 
 /**
- * [CONFIG]: Terminal text styles
+ * ANSI opening and closing codes for each named terminal text style.
  *
  * For available terminal text style codes and syntax, refer to
  * {@link import('../constants/shellStyleCodes').ShellStyleCode}
  */
 export const style: Record<ShellStyleName, ShellTextStyle> = {
-  // Log Levels & Statuses
-  info: [34, 0], // blue
-  verbose: [35, 0], // magenta
-  warn: ['3;93', 0], // yellow
-  error: ['3;91', 0], // red
-  success: ['3;92', 0], // green
-  side: ['2;30', 0], // green
+  // Log messages and status states.
+  info: [34, 39], // blue
+  verbose: [35, 39], // magenta
+  warn: ['3;93', '23;39'], // italic bright yellow
+  error: ['3;91', '23;39'], // italic bright red
+  success: ['3;92', '23;39'], // italic bright green
+  side: ['2;30', '22;39'], // dim black
 
-  // Action
-  highlight: ['1;35', 0], // bold magenta
-  emphasize: [1, 0], // bold
-  delete: ['4;31', 0], // underline red
-  mute: ['2;90', 0], // dim gray
-  attach: ['2;3', 0], // italic
+  // Text emphasis and actions.
+  highlight: ['1;35', '22;39'], // bold magenta
+  emphasize: [1, 22], // bold
+  delete: ['4;31', '24;39'], // underline red
+  mute: ['2;90', '22;39'], // dim gray
+  attach: ['2;3', '22;23'], // dim italic
 
-  // Format
-  title: ['1;33', 0], // bold
-  subtitle: [90, 0], // gray
-  heading: ['1;94', 0], // bold underline cyan
-  label: [2, 0], // dim
-  subtle: ['2;94', 0], // dim
+  // Titles and text hierarchy.
+  title: ['1;33', '22;39'], // bold yellow
+  subtitle: [90, 39], // gray
+  heading: ['1;94', '22;39'], // bold bright blue
+  label: [2, 22], // dim
+  subtle: ['2;94', '22;39'], // dim bright blue
+
+  // Structural elements.
+  border: [36, 39], // cyan
+
   reset: [0, 0], // reset all
 };
 
