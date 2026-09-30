@@ -26,7 +26,7 @@ Milestone
 
 ## 🗺️ Milestones
 
-### 🚀 V1 — Node Script Foundation
+### 🧰 V1 — Node Script Foundation
 
 > Establish the foundation for running Node.js scripts in Node.js and frontend projects.
 >
@@ -35,23 +35,32 @@ Milestone
 >
 > **Status:** 🔵 Started
 
-**🟨 Phase 1 — Establish Terminal Logging**
+**🚀 Phase 1 — Establish Terminal Logging**
 
 Build the core capabilities for styling, logging, and displaying information in the terminal.
 
-| Step    | Name                             | Status    | Purpose                                                                                        |
-| ------- | -------------------------------- |-----------|------------------------------------------------------------------------------------------------|
-| `1.1.1` | Build Terminal Styling Utilities | 🟢 Usable | Provide utilities for styling terminal output, such as text colors and value-based formatting. |
-| `1.1.2` | Implement Terminal Logger        | 🟢 Usable | Provide a reusable logger for displaying structured information in the terminal.               |
-| `1.1.3` | Add Process Logging              | 🟢 Usable | Provide capabilities for displaying and tracking process information in the terminal.          |
-| `1.1.4` | Add Terminal Drawing             | 🟢 Usable | Provide capabilities for drawing or rendering visual elements in the terminal.                 |
+| Step    | Name                             | Status       | Purpose                                                                                        |
+| ------- | -------------------------------- |--------------|------------------------------------------------------------------------------------------------|
+| `1.1.1` | Build Terminal Styling Utilities | 🟦 Completed | Provide utilities for styling terminal output, such as text colors and value-based formatting. |
+| `1.1.2` | Implement Terminal Logger        | 🟩 Completed | Provide a reusable logger for displaying structured information in the terminal.               |
+| `1.1.3` | Add Process Logging              | 🟨 Testing   | Provide capabilities for displaying and tracking process information in the terminal.          |
+| `1.1.4` | Add Terminal Drawing             | 🟩 Completed | Provide capabilities for drawing or rendering visual elements in the terminal.                 |
 
-**🟡 Phase 2 — Establish Command Line Interface**
+**🧰 Phase 2 — Establish Command Line Interface**
 
 Build the capabilities for processing the command line — reading arguments and options, and presenting usage
 information.
 
-**🟡 Phase 3 — Build Environment Configuration**
+| Step    | Name                      | Status     | Purpose                                                                                         |
+| ------- | ------------------------- | ---------- |-------------------------------------------------------------------------------------------------|
+| `1.2.1` | Add Rich Text Formatting  | 🟡 Planned | Provide capabilities for displaying structured text in the terminal, such as lists and indents. |
+| `1.2.2` | Add Template-Based Logger | 🟡 Planned | Provide a function that builds a logger from a template, so a command can generate its own.     |
+| `1.2.3` | Add Command Parsing       | 🟡 Planned | Provide a function that reads a command's arguments and options and returns them structured.    |
+| `1.2.4` | Add Command Manual        | 🟡 Planned | Provide usage text for a command, shown on a help request and when a call is rejected.          |
+| `1.2.5` | Add Command Validation    | 🟡 Planned | Check a call against what the command accepts, and reject it with the manual when it does not.  |
+| `1.2.6` | Add Command Runner        | 🟡 Planned | Call the matching function in a command file from the input, so a small handler needs no file.  |
+
+**🎯 Phase 3 — Build Environment Configuration**
 
 ---
 

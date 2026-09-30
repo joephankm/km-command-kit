@@ -282,3 +282,15 @@ and its name to `BoxStyleName`.
 - `drawBox/buildBox.ts` — builds one drawing's border and row methods from its column widths.
 - `drawBox/formatters.ts` — sits content within a width, padded and filled.
 - `drawBox/paramFunctions.ts` — reads an argument given either as a value or as a full params object.
+
+---
+
+## Todo List
+
+- **Component:** Rich Text **[🟢 High]**\
+  _(Prints text in a format — lists, indentation, and the like)_
+- **Component:** Display Value **[🔶 Medium]**\
+  _(Colors a value by its type, so a printed value reads at a glance)_
+- **Feature:** Style Generator **[🔶 Medium]**\
+  _(Keep only the basic styles in `configs/styleConfig.ts` and generate the rest with a function where they are needed,
+  so the preset pool stops growing with every style a project adds)_

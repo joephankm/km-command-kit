@@ -51,13 +51,13 @@ Work moves through a series of lifecycle stages as the project progresses.
 
 ### Stages
 
-| Stage             | Emoji | Description                                                |
-| ----------------- | ----- | ---------------------------------------------------------- |
-| **Brainstorming** | 🧠    | Ideas being explored and considered.                       |
-| **Planned**       | 🎯    | Selected for future implementation.                        |
-| **In Progress**   | 🚀    | Currently being planned or implemented.                    |
-| **Stabilization** | 🚧    | Completed implementation undergoing testing or refinement. |
-| **Completed**     | ✅    | Work that has been finished.                               |
+| Stage             | Emoji | Description                                                   |
+| ----------------- | ----- |---------------------------------------------------------------|
+| **Brainstorming** | 🧠    | Ideas being explored and considered.                          |
+| **Planned**       | 🎯    | Selected for future implementation.                           |
+| **In Progress**   | 🧰    | Currently being worked on.                                    |
+| **Implemented**   | 🚀    | Implementation is complete; further refinement may be needed. |
+| **Completed**     | ✅    | Work is finished and considered complete.                     |
 
 The typical progression is:
 
@@ -66,10 +66,10 @@ The typical progression is:
        ↓
 🎯 Planned        (selected for next implementation)
        ↓
-🚀 In Progress    (planning and working)
+🧰 In Progress    (planning and working)
        ├───────────┐
        │           ↓
-       │     🧪 Stabilization   (testing and refinement)
+       │     🚀 Implemented     (released, refining as needed)
        │           │
        ├───────────┘
        ↓
@@ -79,14 +79,14 @@ The typical progression is:
 ### Statuses
 
 | Status             | Emoji | Stage         | Meaning                                                                                   |
-| ------------------ | ----- | ------------- | ----------------------------------------------------------------------------------------- |
+|--------------------|-------| ------------- | ----------------------------------------------------------------------------------------- |
 | **Idea**           | 🔶    | Brainstorming | An idea that has not yet been confirmed.                                                  |
 | **Confirmed**      | 🔷    | Brainstorming | An idea confirmed for further development.                                                |
 | **Ready**          | 🟡    | Planned       | Planned and ready to start.                                                               |
 | **Started**        | 🔵    | In Progress   | Work has started but is not yet ready to use.                                             |
 | **Usable**         | 🟢    | In Progress   | Ready to use, but still missing planned features.                                         |
 | **Blocked**        | 🔴    | In Progress   | Work cannot continue for now due to a blocking issue.                                     |
-| **Testing**        | 🟨    | Stabilization | All features are complete and ready to use, but testing or minor fixes are still ongoing. |
-| **To Be Improved** | 🟦    | Completed     | Complete and ready to use, with improvements identified for later.                        |
-| **Stable**         | 🟩    | Completed     | Fully complete and no further work is currently expected.                                 |
+| **Implemented**    | 🟦    | Implemented   | All features are complete and ready to use, but testing or minor fixes are still ongoing. |
+| **Completed**      | 🟩    | Completed     | Fully complete and no further work is currently expected.                                 |
 | **Deprecated**     | 🟥    | Completed     | No longer suitable for use and should not be used.                                        |
+| **Improvable**     | 🟪    | Completed     | Complete and ready to use, with improvements identified for later.                        |

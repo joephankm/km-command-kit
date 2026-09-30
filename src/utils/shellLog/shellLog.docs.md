@@ -19,6 +19,16 @@ terminal/shell context — not portable to a browser or other JS environment.
 - **Task Log** (`task`) — narrates one run from start to finish, with actions and operations under it, step numbers,
   held success messages, and elapsed times.
 
+**Dependencies**
+
+- `shellStyle` — every label, message, and border this util prints is styled through it.
+
+Copy both folders as siblings, so the relative imports between them keep working:
+
+```sh
+cp -R src/utils/shellLog src/utils/shellStyle <target-project>/src/utils/
+```
+
 ---
 
 ## Logger
@@ -81,7 +91,7 @@ Each call opens its level and closes the one before it: a `sub` prints the previ
 `doing` prints the previous action's — along with any operation still open under it — and `done` prints whatever is
 left, deepest level first. A call without a `successMessage` closes silently.
 
-### Success messages
+### Success Messages
 
 `successMessage` is declared when a level **opens** and printed when it **closes**, in that level's success format, so
 the narration reads as "doing X" first and "X succeeded" once it's actually over.
@@ -91,7 +101,7 @@ the narration reads as "doing X" first and "X succeeded" once it's actually over
 `step: true` advances that level's counter; a number sets it explicitly. `totalSteps` sticks to the counter once given,
 so `Step 2 / 5` keeps its total without repeating it. Operation counters restart with each new action.
 
-### Concurrent processes
+### Concurrent Processes
 
 `processLabel` names a process on the line, and `processKey` keys its state separately (defaulting to `processLabel`) —
 so two processes running at once keep their own step counters and their own held messages:
@@ -104,7 +114,7 @@ task.done({ processLabel: 'web' }); // ends web only, the run stays open
 task.done({ processLabel: 'api' }); // last process — the run closes too
 ```
 
-### Ending a run
+### Ending a Run
 
 `done` takes a message, options, both, or neither:
 
@@ -154,6 +164,8 @@ are measured from when each level opened, and a level's line can show its own, i
 | `ShellLogLevel`   | `types/logTypes.ts`      | Type: `'verbose' \| 'info' \| 'warn' \| 'error'`                                   |
 | `ShellLogFunc`    | `types/logTypes.ts`      | Type: `(message: string, detail?: string) => void`                                 |
 
+---
+
 ## Configuration
 
 `configs/taskLogConfig.ts` is the file to edit after copying this util out. It exports one default object with two
@@ -168,7 +180,9 @@ Formats are written with `{placeholder}` tokens — `{icon}`, `{message}`, `{ste
 on a line; `{step}`/`{totalSteps}` inside a step format; `{taskDuration}`, `{actionDuration}`, `{operationDuration}`
 inside a duration format. Every name is listed as an enum in `constants/taskLogConstants.ts`.
 
-## Folder structure
+---
+
+## Folder Structure
 
 - `index.ts` — public entry point, re-exports `logger`, `configureLogger`, `task`, and the logger types.
 - `types/logTypes.ts` — logger types: `ShellLogLevel`, `ShellLogFunc`.
@@ -183,3 +197,12 @@ inside a duration format. Every name is listed as an enum in `constants/taskLogC
 - `taskLog/printers.ts` — renders and prints a line: its step, its label, and the message a closing level held.
 - `taskLog/formatters.ts` — fills a format's placeholders, and renders wall-clock times and durations.
 - `taskLog/messageBag.ts` — holds each level's declared message until the call that closes that level takes it back out.
+
+---
+
+## Todo List
+
+- **Component:** Template Logger **[🟢 High]**\
+  _(Builds a logger from a template, so a project generates the logger its own output needs instead of writing one)_
+- **Component:** Debugger Log **[🔹 Low]**\
+  _(Logging meant for development only, never for what a command prints in normal use)_
