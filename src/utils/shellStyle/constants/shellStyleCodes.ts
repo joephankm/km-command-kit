@@ -1,3 +1,5 @@
+import type { ShellTextStyle } from '../types/styleTypes';
+
 /**
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
  * 📐 Style Rules (ANSI Escape Sequences)
@@ -134,3 +136,21 @@ export enum ShellReset {
   Hidden = 28,
   Strikethrough = 29,
 }
+
+/**
+ * ANSI opening and closing codes for each nature style — the styles every util has, whatever its
+ * configured presets.
+ */
+export const NATURE_STYLES = {
+  reset: [ShellReset.All, ShellReset.All],
+  bold: [ShellDecoration.Bold, ShellReset.BoldOrDim],
+  italic: [ShellDecoration.Italic, ShellReset.Italic],
+  underline: [ShellDecoration.Underline, ShellReset.Underline],
+  hidden: [ShellDecoration.Hidden, ShellReset.Hidden],
+  strikethrough: [ShellDecoration.Strikethrough, ShellReset.Strikethrough],
+} satisfies Record<string, ShellTextStyle>;
+
+/**
+ * Names of the nature styles: a reset of every style, and the plain text decorations.
+ */
+export type ShellNatureStyleName = keyof typeof NATURE_STYLES;

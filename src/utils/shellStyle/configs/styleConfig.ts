@@ -25,19 +25,11 @@ type ShellTitleStyleName =
 /** Styles used for structural elements such as borders. */
 type ShellStructureStyleName = 'border';
 
-/** Styles that describe a general formatting operation, such as resetting all styles. */
-export type ShellNatureStyleName = 'reset';
-
 /**
  * All semantic style names supported by this configuration.
  */
-export type ShellStyleName =
-  | ShellLogLevelStyleName
-  | ShellStatusStyleName
-  | ShellActionStyleName
-  | ShellTitleStyleName
-  | ShellStructureStyleName
-  | ShellNatureStyleName;
+export type ShellPresetStyleName =
+  ShellLogLevelStyleName | ShellStatusStyleName | ShellActionStyleName | ShellTitleStyleName | ShellStructureStyleName;
 
 /**
  * ANSI opening and closing codes for each named terminal text style.
@@ -45,7 +37,7 @@ export type ShellStyleName =
  * For available terminal text style codes and syntax, refer to
  * {@link import('../constants/shellStyleCodes').ShellStyleCode}
  */
-export const style: Record<ShellStyleName, ShellTextStyle> = {
+export const style: Record<ShellPresetStyleName, ShellTextStyle> = {
   // Log messages and status states.
   info: [34, 39], // blue
   verbose: [35, 39], // magenta
@@ -70,8 +62,6 @@ export const style: Record<ShellStyleName, ShellTextStyle> = {
 
   // Structural elements.
   border: [36, 39], // cyan
-
-  reset: [0, 0], // reset all
 };
 
 export default { style };

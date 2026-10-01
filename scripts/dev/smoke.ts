@@ -1,18 +1,11 @@
-import { draw, style, styleCode } from '@/utils/shellStyle';
+import { style } from '@/utils/shellStyle';
 
-console.log('--- styling');
-console.log(style.info('Info message'));
-console.log(style.emphasize('bold ' + style.error('and red') + ' still bold'));
-console.log(JSON.stringify(style.border()), JSON.stringify(style.title('Report', style.border())));
-console.log(styleCode('bold', 'underline', 'cyan'), styleCode('bgRed'), styleCode('resetColor'));
+const show = (value: string): string => JSON.stringify(value);
 
-console.log('--- drawing');
-draw.line(23, { title: 'Report' });
+for (const name of ['reset', 'bold', 'italic', 'underline', 'hidden', 'strikethrough'] as const) {
+  console.log(name.padEnd(14), show(style[name]('text')), ' →', style[name]('text'));
+}
 
-const box = draw.buildBox([12, 8], { thickOutline: true });
-
-box.top();
-box.row(['Name', 'Size'], { style: style.title });
-box.mid();
-box.row(['a.ts', { content: '4 KB', align: 'right' }]);
-box.bot();
+console.log('nested:', style.bold('bold ' + style.italic('and italic') + ' still bold'));
+console.log('over a preset:', style.info('info ' + style.underline('underlined') + ' still info'));
+console.log('style count:', Object.keys(style).length);

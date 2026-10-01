@@ -3,8 +3,8 @@ name: shellStyle
 description:
   Add ANSI text styles and draw terminal boxes and rules with semantic presets or custom SGR codes.
 labels: ['shell', 'ansi', 'terminal', 'style', 'box']
-version: 1.1.0
-updated: 2026-09-29
+version: 1.2.0
+updated: 2026-10-10
 ---
 
 # Shell Style
@@ -294,3 +294,6 @@ and its name to `BoxStyleName`.
 - **Feature:** Style Generator **[🔶 Medium]**\
   _(Keep only the basic styles in `configs/styleConfig.ts` and generate the rest with a function where they are needed,
   so the preset pool stops growing with every style a project adds)_
+- **Improvement:** Split Draw Box **[🔶 Medium]**\
+  _(Have `drawBox` return each line as a string instead of printing it, and move the printing — `buildBox` and its
+  methods — into a `shellLog` component that logs what `drawBox` returns)_

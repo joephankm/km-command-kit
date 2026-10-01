@@ -4,7 +4,7 @@ import { ShellBackground, ShellColor, ShellDecoration, ShellReset } from '../con
  * A supported name that resolves to an ANSI SGR parameter for a color, background, decoration, or
  * reset.
  */
-export type ShellStyleName =
+export type ShellStyleCodeName =
   | Uncapitalize<keyof typeof ShellColor | keyof typeof ShellDecoration>
   | `bg${keyof typeof ShellBackground}`
   | `reset${keyof typeof ShellReset}`;
@@ -20,11 +20,11 @@ const unCapitalize = (key: string): string => `${key.charAt(0).toLowerCase()}${k
  * prefix or otherwise rename keys.
  */
 const toCodeMap = (
-  enumObject: Record<string, number | string>,
+  enumMap: Record<string, number | string>,
   mapKey: (key: string) => string = unCapitalize
 ): Record<string, number> =>
   Object.fromEntries(
-    Object.entries(enumObject)
+    Object.entries(enumMap)
       .filter((entry): entry is [string, number] => typeof entry[1] === 'number')
       .map(([key, value]) => [mapKey(key), value])
   );
@@ -32,14 +32,14 @@ const toCodeMap = (
 /**
  * Maps each supported style name to its numeric ANSI SGR parameter.
  */
-const STYLE_CODE_MAP: Record<ShellStyleName, number> = {
+const STYLE_CODE_MAP: Record<ShellStyleCodeName, number> = {
   ...toCodeMap(ShellColor),
   ...toCodeMap(ShellBackground, key => `bg${key}`),
   ...toCodeMap(ShellDecoration),
   ...toCodeMap(ShellReset, key => `reset${key}`),
-} as Record<ShellStyleName, number>;
+} as Record<ShellStyleCodeName, number>;
 
 /**
  * Converts style names into an SGR parameter string, joining their numeric codes with semicolons.
  */
-export const styleCode = (...names: ShellStyleName[]): string => names.map(name => STYLE_CODE_MAP[name]).join(';');
+export const styleCode = (...names: ShellStyleCodeName[]): string => names.map(name => STYLE_CODE_MAP[name]).join(';');

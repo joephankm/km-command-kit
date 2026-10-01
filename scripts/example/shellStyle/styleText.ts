@@ -1,5 +1,5 @@
 import { style, styleCode } from '@/utils/shellStyle';
-import type { ShellStyleName } from '@/utils/shellStyle/configs/styleConfig';
+import type { ShellPresetStyleName } from '@/utils/shellStyle/configs/styleConfig';
 
 /**
  * Escape character that begins an ANSI control sequence, for the raw codes below.
@@ -10,7 +10,7 @@ const ESC = '\u001B';
  * Every preset, grouped the way the config groups them.
  */
 const exampleSemanticStyles = (): void => {
-  const groups: Record<string, ShellStyleName[]> = {
+  const groups: Record<string, ShellPresetStyleName[]> = {
     'Log and status': ['info', 'verbose', 'warn', 'error', 'success', 'side'],
     Emphasis: ['highlight', 'emphasize', 'delete', 'mute', 'attach'],
     Titles: ['title', 'subtitle', 'heading', 'label', 'subtle'],

@@ -39,12 +39,12 @@ Milestone
 
 Build the core capabilities for styling, logging, and displaying information in the terminal.
 
-| Step    | Name                             | Status       | Purpose                                                                                        |
-| ------- | -------------------------------- |--------------|------------------------------------------------------------------------------------------------|
-| `1.1.1` | Build Terminal Styling Utilities | 🟦 Completed | Provide utilities for styling terminal output, such as text colors and value-based formatting. |
-| `1.1.2` | Implement Terminal Logger        | 🟩 Completed | Provide a reusable logger for displaying structured information in the terminal.               |
-| `1.1.3` | Add Process Logging              | 🟨 Testing   | Provide capabilities for displaying and tracking process information in the terminal.          |
-| `1.1.4` | Add Terminal Drawing             | 🟩 Completed | Provide capabilities for drawing or rendering visual elements in the terminal.                 |
+| Step    | Name                             | Status         | Purpose                                                                                        |
+| ------- | -------------------------------- |----------------|------------------------------------------------------------------------------------------------|
+| `1.1.1` | Build Terminal Styling Utilities | 🟦 Implemented | Provide utilities for styling terminal output, such as text colors and value-based formatting. |
+| `1.1.2` | Implement Terminal Logger        | 🟩 Completed   | Provide a reusable logger for displaying structured information in the terminal.               |
+| `1.1.3` | Add Process Logging              | 🟦 Implemented | Provide capabilities for displaying and tracking process information in the terminal.          |
+| `1.1.4` | Add Terminal Drawing             | 🟩 Completed   | Provide capabilities for drawing or rendering visual elements in the terminal.                 |
 
 **🧰 Phase 2 — Establish Command Line Interface**
 

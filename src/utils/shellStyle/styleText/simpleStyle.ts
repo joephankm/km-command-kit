@@ -1,6 +1,6 @@
 import config from '../configs/styleConfig';
-import type { ShellStyleName } from '../configs/styleConfig';
-import type { ShellStyleFunc } from '../types/styleTypes';
+import { NATURE_STYLES } from '../constants/shellStyleCodes';
+import type { ShellStyleFunc, ShellStyleName } from '../types/styleTypes';
 
 /**
  * Escape character that begins an ANSI control sequence.
@@ -28,10 +28,10 @@ const styleFunc = (openStyle: number | string, closeStyle: number | string): She
 };
 
 /**
- * Style functions generated from every named entry in `styleConfig`.
+ * Style functions generated from every named entry in `styleConfig`, plus every nature style.
  */
 const style: Record<ShellStyleName, ShellStyleFunc> = Object.fromEntries(
-  Object.entries(config.style).map(([name, [open, close]]) => [name, styleFunc(open, close)])
+  Object.entries({ ...config.style, ...NATURE_STYLES }).map(([name, [open, close]]) => [name, styleFunc(open, close)])
 ) as Record<ShellStyleName, ShellStyleFunc>;
 
 export default style;
