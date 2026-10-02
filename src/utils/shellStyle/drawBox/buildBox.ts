@@ -1,5 +1,5 @@
 import config from '../configs/drawBoxConfig';
-import style from '../styleText/simpleStyle';
+import style from '../styleText/presetStyles';
 import type { BorderParams, BuildBoxOptions, CellOptions, CellParams, MidParams, RowOptions } from '../types/boxTypes';
 import type { ArrayOrIndexed, ValueOrParams } from '../types/commonTypes';
 import { formatContent } from './formatters';

@@ -1,5 +1,5 @@
 import { BOX_CHARSETS, BOX_MIXED_CHARSETS } from '../constants/boxCharsets';
-import style from '../styleText/simpleStyle';
+import style from '../styleText/presetStyles';
 import type { BoxStyles, DrawBoxSettings } from '../types/boxTypes';
 
 /**

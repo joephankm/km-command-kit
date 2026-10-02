@@ -3,7 +3,7 @@ name: shellStyle
 description:
   Add ANSI text styles and draw terminal boxes and rules with semantic presets or custom SGR codes.
 labels: ['shell', 'ansi', 'terminal', 'style', 'box']
-version: 1.2.0
+version: 1.3.0
 updated: 2026-10-10
 ---
 
@@ -273,7 +273,7 @@ and its name to `BoxStyleName`.
 - `configs/drawBoxConfig.ts` — holds the box styles and the drawing defaults.
 - `constants/shellStyleCodes.ts` — defines the SGR codes for foreground colors, backgrounds, decorations, and resets.
 - `constants/boxCharsets.ts` — maps each box-drawing charset to the glyph for every position.
-- `types/styleTypes.ts` — defines the shared `ShellStyleFunc` and `ShellTextStyle` types.
+- `types/styleTypes.ts` — defines the shared `ShellStyleFunc` and `ShellStyleCodes` types.
 - `types/boxTypes.ts` — defines the charset, option and param types the drawing tool shares.
 - `types/commonTypes.ts` — defines util types owned by no one tool, such as the two shapes an argument accepts.
 - `styleText/simpleStyle.ts` — creates the named text-wrapping functions from `styleConfig`.
@@ -287,13 +287,8 @@ and its name to `BoxStyleName`.
 
 ## Todo List
 
-- **Component:** Rich Text **[🟢 High]**\
-  _(Prints text in a format — lists, indentation, and the like)_
 - **Component:** Display Value **[🔶 Medium]**\
   _(Colors a value by its type, so a printed value reads at a glance)_
-- **Feature:** Style Generator **[🔶 Medium]**\
-  _(Keep only the basic styles in `configs/styleConfig.ts` and generate the rest with a function where they are needed,
-  so the preset pool stops growing with every style a project adds)_
 - **Improvement:** Split Draw Box **[🔶 Medium]**\
   _(Have `drawBox` return each line as a string instead of printing it, and move the printing — `buildBox` and its
   methods — into a `shellLog` component that logs what `drawBox` returns)_

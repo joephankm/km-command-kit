@@ -1,5 +1,5 @@
 import config from '../configs/drawBoxConfig';
-import style from '../styleText/simpleStyle';
+import style from '../styleText/presetStyles';
 import type { LineOptions } from '../types/boxTypes';
 import buildBox from './buildBox';
 import { formatContent } from './formatters';

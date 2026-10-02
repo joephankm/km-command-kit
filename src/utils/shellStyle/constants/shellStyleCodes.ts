@@ -1,4 +1,4 @@
-import type { ShellTextStyle } from '../types/styleTypes';
+import type { ShellStyleCodes } from '../types/styleTypes';
 
 /**
  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -148,7 +148,7 @@ export const NATURE_STYLES = {
   underline: [ShellDecoration.Underline, ShellReset.Underline],
   hidden: [ShellDecoration.Hidden, ShellReset.Hidden],
   strikethrough: [ShellDecoration.Strikethrough, ShellReset.Strikethrough],
-} satisfies Record<string, ShellTextStyle>;
+} satisfies Record<string, ShellStyleCodes>;
 
 /**
  * Names of the nature styles: a reset of every style, and the plain text decorations.

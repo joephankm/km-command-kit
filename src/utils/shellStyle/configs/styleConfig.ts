@@ -1,4 +1,4 @@
-import type { ShellTextStyle } from '../types/styleTypes';
+import type { ShellStyleCodes } from '../types/styleTypes';
 
 /** Styles for informational, verbose, warning, error, and secondary log messages. */
 type ShellLogLevelStyleName = 'info' | 'verbose' | 'warn' | 'error' | 'side';
@@ -37,7 +37,7 @@ export type ShellPresetStyleName =
  * For available terminal text style codes and syntax, refer to
  * {@link import('../constants/shellStyleCodes').ShellStyleCode}
  */
-export const style: Record<ShellPresetStyleName, ShellTextStyle> = {
+export const style: Record<ShellPresetStyleName, ShellStyleCodes> = {
   // Log messages and status states.
   info: [34, 39], // blue
   verbose: [35, 39], // magenta

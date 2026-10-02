@@ -45,7 +45,7 @@ const exampleOpenAndClose = (): void => {
   // Opened once, so everything after it carries the border style until the colour is closed.
   const opened = style.border();
   const titled = style.title('a title', style.border());
-  const closed = `${ESC}[${styleCode('resetColor')}m`;
+  const closed = `${ESC}[${styleCode(['resetColor'])}m`;
 
   console.log(`  ${opened}──── ${titled} ────${closed}`);
 };
@@ -63,7 +63,7 @@ const exampleRawCodes = (): void => {
   ] as const;
 
   for (const names of codes) {
-    const code = styleCode(...names);
+    const code = styleCode(names);
 
     console.log(`  ${ESC}[${code}m ${names.join(' + ').padEnd(24)} ${ESC}[0m ${style.subtle(`'${code}'`)}`);
   }
