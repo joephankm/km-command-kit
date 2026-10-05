@@ -127,7 +127,7 @@ export type BorderParams = Pick<CellOptions, 'span'>;
 /**
  * Parameters for an interior border, including cells that continue through it.
  */
-export type MidParams = Pick<CellOptions, 'style' | 'span' | 'spanAbove' | 'rowSpan'> & {
+export type MidParams = Pick<CellOptions, 'style' | 'align' | 'span' | 'spanAbove' | 'rowSpan'> & {
   /** Content shown in the continuing cell when `rowSpan` is enabled. */
   content?: string;
 };

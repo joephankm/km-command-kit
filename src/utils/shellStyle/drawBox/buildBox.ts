@@ -2,7 +2,7 @@ import config from '../configs/drawBoxConfig';
 import style from '../styleText/presetStyles';
 import type { BorderParams, BuildBoxOptions, CellOptions, CellParams, MidParams, RowOptions } from '../types/boxTypes';
 import type { ArrayOrIndexed, ValueOrParams } from '../types/commonTypes';
-import { formatContent } from './formatters';
+import markup from '../markupText/markupText';
 import { makeToParams } from './paramFunctions';
 
 /**
@@ -23,7 +23,7 @@ type BorderChars = Record<'left' | 'right' | 'mid' | 'line', string> & {
  * Parameters that may affect a border position. The shared border handler accepts the union of
  * fields used by each border type and ignores fields that do not apply.
  */
-type BorderSpans = Pick<CellOptions, 'style' | 'span' | 'spanAbove' | 'rowSpan'> & { content?: string };
+type BorderSpans = Pick<CellOptions, 'style' | 'align' | 'span' | 'spanAbove' | 'rowSpan'> & { content?: string };
 
 /**
  * Creates drawing methods for a box with fixed column widths.
@@ -91,7 +91,12 @@ export default (widths: number[], options: BuildBoxOptions = {}) => {
       // Leave the spanned column open and show its continuing cell content in place of the border.
       if (borderParams?.rowSpan) {
         const contentStyle = borderParams.style ?? options.style ?? style.reset;
-        const content = formatContent(borderParams.content, width);
+        const content = markup.formatLine(borderParams.content ?? '', {
+          width,
+          align: borderParams.align,
+          fill: ' ',
+          padding: true,
+        });
 
         // Pause the border styling around the content, then apply it again after the cell.
         line += contentStyle() + content + borderStyle();
@@ -160,7 +165,12 @@ export default (widths: number[], options: BuildBoxOptions = {}) => {
         const closing = index === lastIndex ? outerBorder.vertical : innerBorder.vertical;
 
         // Prefer cell styling, then row styling, then the box-wide default.
-        const formattedContent = formatContent(content, width, { align });
+        const formattedContent = markup.formatLine(content ?? '', {
+          width,
+          align,
+          fill: ' ',
+          padding: true,
+        });
         const cellStyle = style ?? rowOptions?.style ?? options.style;
 
         line += (cellStyle ? cellStyle(formattedContent) : formattedContent) + borderStyle(closing);

@@ -1,5 +1,5 @@
 import Pattern from '../constants/patterns';
-import type { MarkupOptions, TextAlign } from '../types/markupTypes';
+import type { MarkupOptions, TextLines, TextAlign } from '../types/markupTypes';
 
 /**
  * Removes every style escape from text, leaving only the characters that show on screen.
@@ -7,29 +7,6 @@ import type { MarkupOptions, TextAlign } from '../types/markupTypes';
  * Example: `\u001B[1mbold\u001B[22m` → `bold`
  */
 export const stripStyles = (text: string): string => text.replace(Pattern.StyleEscapes, '');
-
-/**
- * Options for blank lines: whether they come back as an array.
- */
-type BlankLinesOptions<AsArray extends boolean> = {
-  /** Returns the blank lines as an array of empty lines instead of as line breaks. */
-  asArray?: AsArray;
-};
-
-type StringOrArray<AsArray extends boolean> = AsArray extends true ? string[] : string;
-
-/**
- * Makes a number of blank lines: that many line breaks, or with `asArray`, that many empty lines.
- *
- * Example: `3` → `\n\n\n`, or with `asArray`, `['', '', '']`
- */
-export const blankLines = <AsArray extends boolean = false>(
-  count: number = 1,
-  { asArray }: BlankLinesOptions<AsArray> = {}
-): StringOrArray<AsArray> => {
-  if (count === 1) return (asArray ? [''] : '\n') as StringOrArray<AsArray>;
-  return (asArray ? new Array<string>(count).fill('') : '\n'.repeat(count)) as StringOrArray<AsArray>;
-};
 
 /**
  * Spreads the words of a line across a width, putting the spare columns between them. When the
@@ -60,10 +37,13 @@ const justifyLine = (line: string, width: number): string => {
  *
  * Example: `abc`, width `7`, `'center'` → `  abc  `
  */
-export const alignLine = (line: string, width: number, align: TextAlign = 'left', fill = ' '): string => {
-  const spaceLength = width - stripStyles(line).length;
+export const alignLine = (line: string, width: number, align: TextAlign = 'left', fill?: string): string => {
+  if (align === 'left' && !fill) return line;
 
+  const spaceLength = width - stripStyles(line).length;
   if (spaceLength <= 0) return line;
+
+  fill ??= ' ';
 
   switch (align) {
     case 'right':
@@ -81,24 +61,20 @@ export const alignLine = (line: string, width: number, align: TextAlign = 'left'
 
 /**
  * Options for wrapping text: how each wrapped line is aligned within the width, the text set before
- * and after each line, the blank lines kept above and below the paragraph, and whether the lines
- * come back as an array.
+ * and after each line, and whether the lines come back as an array.
  */
-type WrapTextOptions<AsArray extends boolean> = Pick<MarkupOptions, 'align' | 'margin' | 'marginSize'> & {
-  /** Text set before every line, such as an indent, inside the width. */
-  linePrefix?: string;
-  /** Text set after every line, inside the width. */
-  lineSuffix?: string;
+type WrapTextOptions<AsArray extends boolean> = Pick<MarkupOptions, 'align' | 'linePrefix' | 'lineSuffix'> & {
+  /** Text set before the first line in place of `linePrefix`, such as a list marker. */
+  firstLinePrefix?: string;
   /** Returns the lines as an array instead of joined by line breaks. */
   asArray?: AsArray;
 };
 
 /**
  * Breaks one paragraph into lines no wider than a width, putting as many words on each line as fit.
- * A word wider than the width takes a line of its own, as it is. Given an alignment, every line is
- * aligned within the width, except the last line when justifying, which is left as it is. Given a
- * line prefix or suffix, it is set before or after every line, inside the width. Given a margin,
- * that many blank lines are added above, below, or both.
+ * A word wider than the width takes a line of its own, as it is. The first line takes
+ * `firstLinePrefix` in place of `linePrefix` when given, and wraps within the width its own prefix
+ * leaves.
  *
  * Example: `parse the input now`, width `10` → `parse the\ninput now`, or with `asArray`,
  * `['parse the', 'input now']`
@@ -106,11 +82,15 @@ type WrapTextOptions<AsArray extends boolean> = Pick<MarkupOptions, 'align' | 'm
 export const wrapText = <AsArray extends boolean = false>(
   paragraph: string,
   width: number,
-  { align, linePrefix = '', lineSuffix = '', margin, marginSize = 1, asArray }: WrapTextOptions<AsArray> = {}
-): StringOrArray<AsArray> => {
+  { align, linePrefix = '', firstLinePrefix, lineSuffix = '', asArray }: WrapTextOptions<AsArray> = {}
+): TextLines<AsArray> => {
   const contentWidth = linePrefix || lineSuffix ? width - stripStyles(linePrefix + lineSuffix).length : width;
-  const lines = margin === 'top' || margin === true ? blankLines(marginSize, { asArray: true }) : [];
-  const firstLine = lines.length;
+  const lines: string[] = [];
+
+  // The first line wraps within what its own prefix leaves, then every later line within what
+  // `linePrefix` leaves.
+  let lineWidth =
+    firstLinePrefix === undefined ? contentWidth : width - stripStyles(firstLinePrefix + lineSuffix).length;
 
   let line = '';
   let lineLength = 0;
@@ -120,30 +100,74 @@ export const wrapText = <AsArray extends boolean = false>(
 
     const wordLength = stripStyles(word).length;
 
+    // The first count
     if (!line) {
       line = word;
       lineLength = wordLength;
-    } else if (lineLength + 1 + wordLength <= contentWidth) {
+    }
+    // In a line
+    else if (lineLength + 1 + wordLength <= lineWidth) {
       line += ' ' + word;
       lineLength += 1 + wordLength;
-    } else {
-      lines.push(align ? alignLine(line, contentWidth, align) : line);
+    }
+    // In a line break
+    else {
+      lines.push(align ? alignLine(line, lineWidth, align) : line);
       line = word;
       lineLength = wordLength;
+      if (lineWidth !== contentWidth) lineWidth = contentWidth;
     }
   }
 
   // A line is aligned when the next word pushes it out, and the last line once every word is
   // placed, so no line needs a second pass.
-  lines.push(align && ['center', 'right'].includes(align) ? alignLine(line, contentWidth, align) : line);
+  lines.push(align ? alignLine(line, lineWidth, align) : line);
 
-  if (linePrefix || lineSuffix) {
-    for (let index = firstLine; index < lines.length; index++) {
-      lines[index] = linePrefix + lines[index] + lineSuffix;
+  if (firstLinePrefix !== undefined || linePrefix || lineSuffix) {
+    for (let index = 0; index < lines.length; index++) {
+      lines[index] = (firstLinePrefix && index === 0 ? firstLinePrefix : linePrefix) + lines[index] + lineSuffix;
     }
   }
 
-  if (margin === 'bottom' || margin === true) lines.push(...blankLines(marginSize, { asArray: true }));
+  return (asArray ? lines : lines.join('\n')) as TextLines<AsArray>;
+};
 
-  return (asArray ? lines : lines.join('\n')) as StringOrArray<AsArray>;
+/**
+ * Options for truncating text: the symbol that ends text cut short.
+ */
+type TruncateTextOptions = {
+  /** Text set where the cut text ends, inside the width, default is `...`. */
+  ellipsis?: string;
+};
+
+/**
+ * Cuts text wider than a width down to it, ending it with an ellipsis, counted inside the width.
+ *
+ * Example: `parse the input now`, width `12` → `parse the...`
+ */
+export const truncateText = (text: string, width: number, { ellipsis = '...' }: TruncateTextOptions = {}): string => {
+  if (stripStyles(text).length <= width) return text;
+
+  let remaining = Math.max(width - stripStyles(ellipsis).length, 0);
+  let result = '';
+  let isStyleCode = false;
+  let isCut = false;
+
+  for (const part of text.split(Pattern.StyleEscapeSplit)) {
+    if (isStyleCode) {
+      result += part;
+    } else if (!isCut) {
+      if (part.length <= remaining) {
+        result += part;
+        remaining -= part.length;
+      } else {
+        result += part.slice(0, remaining) + ellipsis;
+        isCut = true;
+      }
+    }
+
+    isStyleCode = !isStyleCode;
+  }
+
+  return result;
 };

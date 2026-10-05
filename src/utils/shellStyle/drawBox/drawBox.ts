@@ -1,8 +1,8 @@
 import config from '../configs/drawBoxConfig';
+import markup from '../markupText/markupText';
 import style from '../styleText/presetStyles';
 import type { LineOptions } from '../types/boxTypes';
 import buildBox from './buildBox';
-import { formatContent } from './formatters';
 
 export default {
   buildBox,
@@ -25,19 +25,22 @@ export default {
     const fill = (thickLine ? box.thick : box.regular).horizontal;
     const lineStyle = borderStyle ?? config.settings.borderStyle;
 
-    // Include the formatter's side padding around the title.
     if (title) {
       // Suspend the border style for the title, then restore it afterward.
       const styledTitle = (titleStyle ?? style.reset)(title, lineStyle());
 
       // Preserve the requested inset when the title is aligned against either end.
-      const lead = align === 'left' ? fill.repeat(inset) : '';
-      const tail = align === 'right' ? fill.repeat(inset) : '';
+      const prefix = align === 'left' ? fill.repeat(inset) : '';
+      const suffix = align === 'right' ? fill.repeat(inset) : '';
 
-      // Account for escape-code characters because the formatter measures string length directly.
-      const finalWidth = width - lead.length - tail.length + styledTitle.length - title.length;
+      // The spaces sit between the title and the rule, so they go on the text, not past the fill.
+      const titleLine = markup.formatLine(` ${styledTitle} `, {
+        width: width - prefix.length - suffix.length,
+        align,
+        fill,
+      });
 
-      console.log(lineStyle(lead + formatContent(styledTitle, finalWidth, { align, fill }) + tail));
+      console.log(lineStyle(prefix + titleLine + suffix));
     } else {
       console.log(lineStyle(fill.repeat(width)));
     }
