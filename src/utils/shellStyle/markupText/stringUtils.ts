@@ -2,18 +2,23 @@ import Pattern from '../constants/patterns';
 import type { MarkupOptions, TextLines, TextAlign } from '../types/markupTypes';
 
 /**
- * Removes every style escape from text, leaving only the characters that show on screen.
+ * Provides plain text for layout calculations.
  *
- * Example: `\u001B[1mbold\u001B[22m` → `bold`
+ * Removes ANSI style escape sequences while preserving the visible text.
+ *
+ * @example `\u001B[1mbold\u001B[22m` => `bold`
  */
 export const stripStyles = (text: string): string => text.replace(Pattern.StyleEscapes, '');
 
 /**
- * Spreads the words of a line across a width, putting the spare columns between them. When the
- * spare columns do not divide evenly, the leftmost gaps take one more each. A line of one word is
- * aligned left instead.
+ * Supports:
+ * - Distributing extra space between words.
+ * - Padding a single-word line on the right.
  *
- * Example: `a bc def`, width `12` → `a   bc   def`
+ * Distributes available space between words, giving any remainder to the leftmost gaps. A
+ * single-word line is padded on the right.
+ *
+ * @example `a bc def`, width `12` => `a   bc   def`
  */
 const justifyLine = (line: string, width: number): string => {
   const words = line.split(' ').filter(Boolean);
@@ -32,10 +37,14 @@ const justifyLine = (line: string, width: number): string => {
 };
 
 /**
- * Sits one line within a width by an alignment, filling the columns left over with the fill
- * character. A line already as wide as the width, or wider, is returned as it is.
+ * Places text within an available width.
  *
- * Example: `abc`, width `7`, `'center'` → `  abc  `
+ * Supports:
+ * - Left, center, right, and justified alignment.
+ * - Fill characters.
+ * - Returning text unchanged when it already meets or exceeds the width.
+ *
+ * @example `abc`, width `7`, `'center'` => `  abc  `
  */
 export const alignLine = (line: string, width: number, align: TextAlign = 'left', fill?: string): string => {
   if (align === 'left' && !fill) return line;
@@ -71,12 +80,15 @@ type WrapTextOptions<AsArray extends boolean> = Pick<MarkupOptions, 'align' | 'l
 };
 
 /**
- * Breaks one paragraph into lines no wider than a width, putting as many words on each line as fit.
- * A word wider than the width takes a line of its own, as it is. The first line takes
- * `firstLinePrefix` in place of `linePrefix` when given, and wraps within the width its own prefix
- * leaves.
+ * Arranges a paragraph into lines for display.
  *
- * Example: `parse the input now`, width `10` → `parse the\ninput now`, or with `asArray`,
+ * Supports:
+ * - A target width and alignment.
+ * - Per-line prefixes and suffixes, with a separate prefix for the first line.
+ * - Returning joined text or an array of lines.
+ * - Keeping words intact when they do not fit on a line.
+ *
+ * @example `parse the input now`, width `10` => `parse the\ninput now`, or with `asArray`,
  * `['parse the', 'input now']`
  */
 export const wrapText = <AsArray extends boolean = false>(
@@ -141,9 +153,13 @@ type TruncateTextOptions = {
 };
 
 /**
- * Cuts text wider than a width down to it, ending it with an ellipsis, counted inside the width.
+ * Shortens text for a constrained display area.
  *
- * Example: `parse the input now`, width `12` → `parse the...`
+ * Supports:
+ * - A custom ending marker (default `...`).
+ * - Keeping the marker within the requested width when it fits.
+ *
+ * @example `parse the input now`, width `12` => `parse the...`
  */
 export const truncateText = (text: string, width: number, { ellipsis = '...' }: TruncateTextOptions = {}): string => {
   if (stripStyles(text).length <= width) return text;

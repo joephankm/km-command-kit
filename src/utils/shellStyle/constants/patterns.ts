@@ -21,21 +21,4 @@ export default {
    * @example `say \u001B[1mhi\u001B[22m` => `['say ', '\u001B[1m', 'hi', '\u001B[22m', '']`
    */
   StyleEscapeSplit: new RegExp(`(${STYLE_ESCAPE})`, 'u'),
-
-  /**
-   * The first letter of every word, along with the space before the word and anything in the word
-   * ahead of that letter: punctuation, and style escapes. Captures the space, what comes ahead of
-   * the letter, and the letter.
-   *
-   * @example `(see) the \u001B[1mrest` => `(s`, ` t`, ` \u001B[1mr` => `s`, `t`, `r`
-   */
-  WordStart: new RegExp(`(^|\\s)((?:${STYLE_ESCAPE}|[^\\s\\p{L}])*)(\\p{L})`, 'gu'),
-
-  /**
-   * The first letter of the text, along with everything ahead of it: spaces, punctuation, and style
-   * escapes. Captures what comes ahead of the letter, and the letter.
-   *
-   * @example `  "\u001B[1mquote` => `  "\u001B[1mq` => `q`
-   */
-  TextStart: new RegExp(`^((?:${STYLE_ESCAPE}|[^\\p{L}])*)(\\p{L})`, 'u'),
 };

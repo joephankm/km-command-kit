@@ -2,9 +2,9 @@
 name: shellStyle
 description:
   Add ANSI text styles and draw terminal boxes and rules with semantic presets or custom SGR codes.
-labels: ['shell', 'ansi', 'terminal', 'style', 'box']
-version: 1.3.1
-updated: 2026-10-05
+labels: ['shell', 'ansi', 'terminal', 'style', 'box', 'markup']
+version: 1.4.0
+updated: 2026-10-06
 ---
 
 # Shell Style
@@ -15,20 +15,22 @@ updated: 2026-10-05
 sequences are interpreted by terminals that support them; other environments may display the control
 codes literally. Box drawing also depends on the terminal font supporting the selected glyphs.
 
-It holds two components, which share nothing but the escape codes underneath them:
+It holds three components:
 
 - **Styling** (`styleText/`) — wrapping text in a style, either a semantic preset or a code composed by hand.
 - **Drawing** (`drawBox/`) — boxes, tables and rules built from Unicode box-drawing glyphs.
+- **Markup** (`markupText/`) — text recased, styled, set within a width, and laid out as blocks and lists.
 
 ---
 
 ## Exports (`index.ts`)
 
-| Export      | Component   | Source                     | Description                                                          |
-| ----------- | ----------- | -------------------------- | -------------------------------------------------------------------- |
-| `style`     | `styleText` | `styleText/simpleStyle.ts` | Named functions that wrap text in configured ANSI styles             |
-| `styleCode` | `styleText` | `styleText/styleCode.ts`   | Converts style names into a semicolon-separated SGR parameter string |
-| `draw`      | `drawBox`   | `drawBox/drawBox.ts`       | Provides `buildBox` and `line` drawing methods                       |
+| Export      | Component    | Source                     | Description                                                           |
+| ----------- | ------------ | -------------------------- | --------------------------------------------------------------------- |
+| `style`     | `styleText`  | `styleText/simpleStyle.ts` | Named functions that wrap text in configured ANSI styles              |
+| `styleCode` | `styleText`  | `styleText/styleCode.ts`   | Converts style names into a semicolon-separated SGR parameter string  |
+| `draw`      | `drawBox`    | `drawBox/drawBox.ts`       | Provides `buildBox` and `line` drawing methods                        |
+| `markup`    | `markupText` | `markupText/markupText.ts` | Formats text as cased and styled text, single lines, blocks and lists |
 
 ---
 
@@ -266,6 +268,160 @@ and its name to `BoxStyleName`.
 
 ---
 
+## Markup
+
+`markup` formats terminal text without printing it. Use `formatText` to change a string's case or style, `displayLine`
+to fit one line, and the `make*` methods to build lines, paragraphs, or lists. Results are strings; `makeBlank`,
+`makeBlock`, and `makeList` can return arrays of lines with `asArray: true`.
+
+```ts
+import { markup } from '@/utils/shellStyle';
+
+console.log(markup.makeList(['parse the input given on the command line', 'validate'], { width: 20, indent: 2 }));
+```
+
+```
+  • parse the input
+    given on the
+    command line
+  • validate
+```
+
+Method names describe the shape of the result:
+
+| Prefix    | Produces                                    | Methods                              |
+| --------- | ------------------------------------------- | ------------------------------------ |
+| `make`    | A structure: lines arranged as a whole      | `makeBlock`, `makeList`, `makeBlank` |
+| `display` | A layout: content placed within a width     | `displayLine`                        |
+| `format`  | A string process: one text changed in place | `formatText`                         |
+
+Widths count visible characters rather than ANSI SGR escape sequences, so styled text can be laid out without counting
+the styling codes as columns. Wrapping keeps words intact; a single word longer than the available width can therefore
+extend past it.
+
+### `markup.formatText(text, options?)`
+
+Optionally applies a case conversion, then wraps the result in a named preset or a style composed from SGR code names.
+With no options, it returns the input unchanged:
+
+```ts
+markup.formatText('pArSe the inPUT', { textCase: 'title', style: ['bold'] }); // bold 'Parse The Input'
+markup.formatText('done', { style: 'success' }); // the `success` preset
+```
+
+| Text case    | Result for `pArSe the inPUT` |
+| ------------ | ---------------------------- |
+| `upper`      | `PARSE THE INPUT`            |
+| `lower`      | `parse the input`            |
+| `title`      | `Parse The Input`            |
+| `sentence`   | `Parse the input`            |
+| `capitalize` | `PArSe the inPUT`            |
+
+### `markup.displayLine(text, options?)`
+
+Fits one string within `width`. Text that is too long is truncated and ends with `ellipsis`; shorter text can be
+aligned and padded with `fill`. Without `width`, the input is returned unchanged. Padding, when requested, is added
+outside the content width.
+
+```ts
+markup.displayLine('parse the input now', { width: 12 }); // 'parse the...'
+markup.displayLine('Report', { width: 12, align: 'center', fill: '·' }); // '···Report···'
+```
+
+### `markup.makeBlank(count?, options?)`
+
+Returns `count` blank lines (`1` by default), either as newline characters or, with `asArray: true`, as empty strings.
+
+```ts
+markup.makeBlank(2); // '\n\n'
+markup.makeBlank(2, { asArray: true }); // ['', '']
+```
+
+### `markup.makeBlock(text, options?)`
+
+Formats paragraphs supplied as an array, or as a string split on line breaks. With `width`, each paragraph wraps and
+can be aligned; `firstLinePrefix` replaces `linePrefix` on the first line of each paragraph, and `lineSuffix` is added
+to every line. Prefixes and suffixes take up space inside the requested width. By default, one blank line follows each
+paragraph, including the last; set `spaceAfter: 0` to omit them. `spaceBefore` adds blank lines before the first
+paragraph. `padding` adds spaces outside each line's prefixes and suffix.
+
+```ts
+console.log(markup.makeBlock('parse the input given on the command line', { width: 16, align: 'justify' }));
+```
+
+```
+parse  the input
+given   on   the
+command     line
+```
+
+### `markup.makeList(items, options?)`
+
+Formats each item as a paragraph. Bulleted items use `•` by default; numbered items use decimal numbers and `.` by
+default. Wrapped lines align with the item text, beneath the first line's marker. Numbered values are right-aligned so
+the item text starts in the same column. `startNumber` continues a sequence from the supplied value, and
+`numberWidth` can reserve the same number of columns as an earlier list:
+
+```ts
+console.log(
+  markup.makeList(['parse', 'validate', 'print', 'exit'], { width: 20, numbered: true, numberType: 'upperRoman' })
+);
+```
+
+```
+  I. parse
+ II. validate
+III. print
+ IV. exit
+```
+
+Set `marker` to change the bullet or the text after each number (`)` produces `1)`). `indent` adds leading spaces
+before both the marker and item text. `spaceBefore` adds blank lines before the first item; `spaceAfter` adds blank
+lines after the entire list.
+
+| Number type  | Numbers        |
+| ------------ | -------------- |
+| `decimal`    | `1` `2` `3`    |
+| `upperRoman` | `I` `II` `III` |
+| `lowerRoman` | `i` `ii` `iii` |
+| `upperAlpha` | `A` `B` `C`    |
+| `lowerAlpha` | `a` `b` `c`    |
+| `circled`    | `①` `②` `③`    |
+
+Alpha numbering continues past `Z` like spreadsheet columns (`AA`, `AB`). Circled numbering supports values through
+`㊿`, then falls back to ordinary digits.
+
+### Options
+
+| Option            | Type                                           | Used by                                | Description                                                                          |
+| ----------------- | ---------------------------------------------- | -------------------------------------- |--------------------------------------------------------------------------------------|
+| `width`           | number                                         | `displayLine`, `makeBlock`, `makeList` | Visible columns available for content; enables truncation or wrapping as applicable  |
+| `align`           | `'left'`, `'center'`, `'right'` or `'justify'` | `displayLine`, `makeBlock`, `makeList` | Content alignment; defaults to `'left'`                                              |
+| `ellipsis`        | string                                         | `displayLine`                          | Ending used when text is truncated; defaults to `'...'`                              |
+| `fill`            | string                                         | `displayLine`                          | Character used to fill space created by alignment; defaults to a space               |
+| `padding`         | `'left'`, `'right'` or `true`                  | `displayLine`, `makeBlock`, `makeList` | Adds spaces outside the content on the selected side(s); `true` means both           |
+| `paddingSize`     | number                                         | `displayLine`, `makeBlock`, `makeList` | Number of padding spaces; defaults to `1`                                            |
+| `linePrefix`      | string                                         | `makeBlock`                            | Text before each wrapped line, within the width                                      |
+| `firstLinePrefix` | string or `(index) => string`                  | `makeBlock`                            | First-line prefix per paragraph, replacing `linePrefix`; function receives its index |
+| `lineSuffix`      | string                                         | `makeBlock`                            | Text after each wrapped line, within the width                                       |
+| `indent`          | number                                         | `makeList`                             | Leading spaces before each item                                                      |
+| `marker`          | string                                         | `makeList`                             | Bullet or text after the number; defaults to `'•'` or `'.'` when numbered            |
+| `numbered`        | boolean                                        | `makeList`                             | Outputs numbered items instead of bullets                                            |
+| `startNumber`     | number                                         | `makeList`                             | Number assigned to the first item; defaults to `1`                                   |
+| `numberType`      | number type name                               | `makeList`                             | Number format; defaults to decimal                                                   |
+| `numberWidth`     | number                                         | `makeList`                             | Reserved width for right-aligned numbers; defaults to the widest number              |
+| `spaceBefore`     | number                                         | `makeBlock`, `makeList`                | Blank lines before the first paragraph or item                                       |
+| `spaceAfter`      | number                                         | `makeBlock`, `makeList`                | Blank lines after each block paragraph (default `1`) or once after a list            |
+| `asArray`         | boolean                                        | `makeBlank`, `makeBlock`, `makeList`   | Returns lines as an array instead of joining them with line breaks                   |
+| `style`           | preset name or array of code names             | `formatText`                           | Style wrapped around the text                                                        |
+| `textCase`        | text case name                                 | `formatText`                           | Case conversion applied before styling                                               |
+
+**Without `width`,** `makeBlock` returns each paragraph as supplied, without wrapping or applying alignment, prefixes,
+or suffixes. `makeList` likewise returns the item strings without adding markers or indentation. Supply a width when you
+want list markers, wrapping, or alignment.
+
+---
+
 ## Folder structure
 
 - `index.ts` — public entry point for the `style`, `styleCode`, and `draw` exports.
@@ -282,6 +438,15 @@ and its name to `BoxStyleName`.
 - `drawBox/buildBox.ts` — builds one drawing's border and row methods from its column widths.
 - `drawBox/formatters.ts` — sits content within a width, padded and filled.
 - `drawBox/paramFunctions.ts` — reads an argument given either as a value or as a full params object.
+- `markupText/markupText.ts` — the markup entry point, gathering every method under one default export.
+- `markupText/formatters.ts` — string processes: `formatText`.
+- `markupText/layouts.ts` — content placed within a width: `displayLine`.
+- `markupText/structures.ts` — lines arranged as a whole: `makeBlank`, `makeBlock`, `makeList`.
+- `markupText/stringUtils.ts` — strips styles, and aligns, wraps and truncates text by its visible width.
+- `common/textCases.ts` — title, sentence and first-letter cases; independent, so it can be copied out on its own.
+- `common/numberStyles.ts` — numbers written as Roman numerals, letters or circled digits; independent, like `textCases.ts`.
+- `constants/patterns.ts` — the style-escape patterns for stripping and splitting styled text.
+- `types/markupTypes.ts` — the option and line types the markup methods share.
 
 ---
 
@@ -292,3 +457,7 @@ and its name to `BoxStyleName`.
 - **Improvement:** Split Draw Box **[🔶 Medium]**\
   _(Have `drawBox` return each line as a string instead of printing it, and move the printing — `buildBox` and its
   methods — into a `shellLog` component that logs what `drawBox` returns)_
+- **Feature:** Markup Columns **[🔶 Medium]**\
+  _(Sets content in columns without borders, each column aligned on its own, for description displays such as a TUI's)_
+- **Feature:** Markup Quote **[🔶 Medium]**\
+  _(Sets content off as a quote behind a border on the left, on both sides, or all round as a box)_

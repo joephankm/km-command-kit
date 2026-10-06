@@ -34,7 +34,7 @@ export default {
       const suffix = align === 'right' ? fill.repeat(inset) : '';
 
       // The spaces sit between the title and the rule, so they go on the text, not past the fill.
-      const titleLine = markup.formatLine(` ${styledTitle} `, {
+      const titleLine = markup.displayLine(` ${styledTitle} `, {
         width: width - prefix.length - suffix.length,
         align,
         fill,

@@ -1,36 +1,24 @@
 import { markup } from '@/utils/shellStyle';
 
-const show = (name: string, list: string): void => {
-  console.log(`--- ${name}`);
+const show = (label: string, value: unknown) => console.log(label, JSON.stringify(value));
 
-  for (const line of list.split('\n')) {
-    console.log(`|${line}|`);
-  }
-};
-
-const steps = ['parse the input given on the command line', 'validate', 'print the manual when rejected'];
-const base = { width: 22, spaceAfter: 0 } as const;
-
-show('numbered', markup.formatList(steps, { ...base, numbered: true }));
-show('numbered, marker ")"', markup.formatList(steps, { ...base, numbered: true, marker: ')' }));
+show('formatText', markup.formatText('pArSe the inPUT', { textCase: 'title', style: ['bold'] }));
+show('displayLine', markup.displayLine('parse the input now', { width: 12 }));
+show('displayLine center', markup.displayLine('Report', { width: 12, align: 'center', fill: '·' }));
+show('makeBlank', markup.makeBlank(2));
+show('makeBlock', markup.makeBlock('parse the input given on the command line', { width: 16, align: 'right' }));
+show('makeBlock arr', markup.makeBlock('first paragraph\nsecond', { width: 20, asArray: true }));
+show('makeList', markup.makeList(['parse the input given on the command line', 'validate'], { width: 20, indent: 2 }));
 show(
-  'startNumber 4 (picks up an interrupted list)',
-  markup.formatList(steps, { ...base, numbered: true, startNumber: 4 })
+  'makeList num',
+  markup.makeList(['parse', 'validate', 'print'], { width: 20, numbered: true, numberType: 'upperRoman', marker: ')' })
 );
-show('9 to 11: right-aligned', markup.formatList(steps, { ...base, numbered: true, startNumber: 9 }));
-show(
-  'numbered, indent 2, padding left',
-  markup.formatList(steps, { ...base, numbered: true, indent: 2, padding: 'left' })
+console.log(markup.makeList(['parse the input given on the command line', 'validate'], { width: 20, indent: 2 }));
+console.log('---');
+console.log(
+  markup.makeList(['parse', 'validate', 'print', 'exit'], { width: 20, numbered: true, numberType: 'upperRoman' })
 );
-show('not numbered: startNumber ignored', markup.formatList(steps, { ...base, startNumber: 5 }));
-
-console.log('=== numberWidth');
-const firstPart = ['parse the input', 'validate'];
-const secondPart = ['print the manual', 'exit'];
-show('part 1 (1-2), numberWidth 2', markup.formatList(firstPart, { ...base, numbered: true, numberWidth: 2 }));
-show(
-  'part 2 (9-10), numberWidth 2',
-  markup.formatList(secondPart, { ...base, numbered: true, startNumber: 9, numberWidth: 2 })
-);
-show('part 1 without numberWidth (for contrast)', markup.formatList(firstPart, { ...base, numbered: true }));
-show('numberWidth 3', markup.formatList(firstPart, { ...base, numbered: true, numberWidth: 3 }));
+console.log('---');
+console.log(markup.makeList(['parse', 'validate'], { width: 20, numbered: true, startNumber: 9 }));
+console.log('---');
+console.log(markup.makeBlock('parse the input given on the command line', { width: 16, align: 'justify' }));

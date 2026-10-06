@@ -91,7 +91,7 @@ export default (widths: number[], options: BuildBoxOptions = {}) => {
       // Leave the spanned column open and show its continuing cell content in place of the border.
       if (borderParams?.rowSpan) {
         const contentStyle = borderParams.style ?? options.style ?? style.reset;
-        const content = markup.formatLine(borderParams.content ?? '', {
+        const content = markup.displayLine(borderParams.content ?? '', {
           width,
           align: borderParams.align,
           fill: ' ',
@@ -165,7 +165,7 @@ export default (widths: number[], options: BuildBoxOptions = {}) => {
         const closing = index === lastIndex ? outerBorder.vertical : innerBorder.vertical;
 
         // Prefer cell styling, then row styling, then the box-wide default.
-        const formattedContent = markup.formatLine(content ?? '', {
+        const formattedContent = markup.displayLine(content ?? '', {
           width,
           align,
           fill: ' ',

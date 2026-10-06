@@ -1,86 +1,133 @@
 import type { BoxAlign } from './boxTypes';
 import type { ShellStyleName, ShellStyleStartCodeName } from './styleTypes';
+import type { NumberStyleName } from '../common/numberStyles';
 
 /**
- * Where content sits within its width: one of the box alignments, or spread to touch both edges.
+ * Text alignment modes for markup formatting.
  */
 export type TextAlign = BoxAlign | 'justify';
 
 /**
- * Which side of the content its padding sits on: before it, after it, or both (`true`).
+ * Side or sides where text padding appears.
  */
 export type PaddingSide = 'left' | 'right' | true;
 
 /**
- * Every option the markup formatters share, each formatter picking the ones it takes.
+ * Shared formatting settings for markup text.
  */
 export type MarkupOptions = {
-  /** The columns content is given to align and wrap within; unset, nothing wraps. */
+  /**
+   * Target width for formatted content.
+   */
   width?: number;
-  /** Text set where content cut down to the width ends, inside the width, default is `...`. */
+  /**
+   * Marker appended to shortened content.
+   *
+   * @default '...'
+   */
   ellipsis?: string;
-  /** Text repeated to fill the columns left over when aligning content, default is a space. */
+  /**
+   * Character used to fill unused width.
+   *
+   * @default ' '
+   */
   fill?: string;
-  /** Where content sits within its width, default is `'left'`. */
+  /**
+   * Content alignment.
+   *
+   * @default 'left'
+   */
   align?: TextAlign;
-  /** How many columns the content is pushed right from the left edge. */
+  /**
+   * Indentation before content.
+   */
   indent?: number;
-  /** Which side of the content its padding sits on. */
+  /**
+   * Side or sides where padding appears around content.
+   */
   padding?: PaddingSide;
-  /** How many blank columns the padding is, default is `1`. */
+  /**
+   * Number of padding characters.
+   *
+   * @default 1
+   */
   paddingSize?: number;
-  /** Text set before every line, such as an indent, inside the width. */
+  /**
+   * Text placed before each line.
+   */
   linePrefix?: string;
   /**
-   * Text set before each paragraph's first line in place of `linePrefix`, or a function of the
-   * paragraph's index returning it, such as a list number.
+   * Prefix used on each paragraph's first line instead of `linePrefix`.
+   *
+   * Accepts a fixed string or a function that returns a prefix for the paragraph index.
    */
   firstLinePrefix?: string | ((index: number) => string);
-  /** Text set after every line, inside the width. */
+  /**
+   * Text placed after each line.
+   */
   lineSuffix?: string;
   /**
-   * The mark set ahead of every list item, or after its number in a numbered list, default is
-   * `•`, or `.` when numbered.
+   * Marker used for list items.
+   *
+   * @default '•' (Bulleted List) or '.' (Numbered List)
    */
   marker?: string;
-  /** Numbers the list items, in order. */
-  numbered?: boolean;
-  /** The number the first list item takes when numbered, default is `1`. */
-  startNumber?: number;
   /**
-   * The columns every number is right-aligned within when numbered, default is the width of the
-   * largest number in the list.
+   * Whether list items are numbered.
+   */
+  numbered?: boolean;
+  /**
+   * Format for list numbers, such as Roman numerals.
+   *
+   * @default 'decimal'
+   */
+  numberType?: NumberStyleName;
+  /**
+   * Width reserved for each list number.
+   *
+   * @default Width of the widest formatted number.
    */
   numberWidth?: number;
-  /** How many blank lines come before the first block. */
+  /**
+   * Starting number for a numbered list.
+   *
+   * @default 1
+   */
+  startNumber?: number;
+  /**
+   * Blank lines before formatted content.
+   */
   spaceBefore?: number;
-  /** How many blank lines follow each block, default is `1`. */
+  /**
+   * Blank lines after formatted content.
+   */
   spaceAfter?: number;
 };
 
 /**
- * Lines as one text joined by line breaks, or as an array of lines when `AsArray` is `true`.
+ * Result shape for formatted text: a string or an array of lines.
  */
 export type TextLines<AsArray extends boolean> = AsArray extends true ? string[] : string;
 
 /**
- * Options for formatting a single line of text.
+ * Formatting settings for a single line of text.
  */
-export type FormatLineOptions = Pick<
+export type DisplayLineOptions = Pick<
   MarkupOptions,
   'width' | 'align' | 'ellipsis' | 'fill' | 'padding' | 'paddingSize'
 >;
 
 /**
- * Options for formatting a list of items.
+ * Content and layout settings for formatted list items.
  */
-export type FormatListOptions<AsArray extends boolean = false> = Pick<
+export type MakeListOptions<AsArray extends boolean = false> = Pick<
   MarkupOptions,
   | 'width'
   | 'indent'
   | 'marker'
   | 'numbered'
   | 'startNumber'
+  | 'numberType'
   | 'numberWidth'
   | 'align'
   | 'padding'
@@ -88,14 +135,16 @@ export type FormatListOptions<AsArray extends boolean = false> = Pick<
   | 'spaceBefore'
   | 'spaceAfter'
 > & {
-  /** Returns the lines as an array, one per line, instead of joined by line breaks. */
+  /**
+   * Whether to return formatted lines as an array.
+   */
   asArray?: AsArray;
 };
 
 /**
- * Options for formatting a block of text.
+ * Paragraph layout and spacing settings for text blocks.
  */
-export type FormatBlockOptions<AsArray extends boolean = false> = Pick<
+export type MakeBlockOptions<AsArray extends boolean = false> = Pick<
   MarkupOptions,
   | 'width'
   | 'align'
@@ -108,22 +157,27 @@ export type FormatBlockOptions<AsArray extends boolean = false> = Pick<
   | 'spaceBefore'
   | 'spaceAfter'
 > & {
-  /** Returns the lines as an array, one per line, instead of joined by line breaks. */
+  /**
+   * Whether to return formatted lines as an array.
+   */
   asArray?: AsArray;
 };
 
 /**
- * A way to recase a text's letters: every letter a capital, every letter small, the first letter of
- * every word a capital, or the first letter of the text a capital.
+ * Letter-case transformations available to text formatting.
  */
 export type TextCase = 'upper' | 'lower' | 'title' | 'sentence' | 'capitalize';
 
 /**
- * Options for formatting a piece of text: the style it takes, and the case its letters are set in.
+ * Visual style and letter-case settings for formatted text.
  */
 export type FormatTextOptions = {
-  /** A predefined style by name, or a list of code names to build one from. */
+  /**
+   * Named style or list of ANSI style codes.
+   */
   style?: ShellStyleName | readonly ShellStyleStartCodeName[];
-  /** The case the text's letters are set in. */
+  /**
+   * Letter-case transformation.
+   */
   textCase?: TextCase;
 };
