@@ -3,6 +3,11 @@ import type { ShellStyleName, ShellStyleStartCodeName } from './styleTypes';
 import type { NumberStyleName } from '../common/numberStyles';
 
 /**
+ * A style given as a style name, or as a list of start code names to build one from.
+ */
+export type ShellTextStyle = ShellStyleName | readonly ShellStyleStartCodeName[];
+
+/**
  * Text alignment modes for markup formatting.
  */
 export type TextAlign = BoxAlign | 'justify';
@@ -175,7 +180,7 @@ export type FormatTextOptions = {
   /**
    * Named style or list of ANSI style codes.
    */
-  style?: ShellStyleName | readonly ShellStyleStartCodeName[];
+  style?: ShellTextStyle;
   /**
    * Letter-case transformation.
    */
