@@ -1,6 +1,5 @@
 import { capitalize, sentenceCase, titleCase } from '../common/textCases';
-import style from '../styleText/presetStyles';
-import { styleFuncByCode } from '../styleText/styleFuncByCode';
+import { textStyleFunc } from '../styleText/styleFuncByCode';
 import type { FormatTextOptions, TextCase } from '../types/markupTypes';
 
 /**
@@ -24,9 +23,8 @@ const CASE_FUNC_MAP: Record<TextCase, (text: string) => string> = {
 export const formatText = (text: string, { style: textStyle, textCase }: FormatTextOptions = {}): string => {
   const casedText = textCase ? CASE_FUNC_MAP[textCase](text) : text;
 
-  if (!textStyle?.length) return casedText;
+  if (!textStyle) return casedText;
 
-  const styleText = typeof textStyle === 'string' ? style[textStyle] : styleFuncByCode(textStyle);
-
-  return styleText(casedText);
+  // A style function is used as given; a named style was created once, and code names are created here.
+  return typeof textStyle === 'function' ? textStyle(casedText) : textStyleFunc(textStyle)(casedText);
 };

@@ -1,5 +1,5 @@
 import type { BoxAlign } from './boxTypes';
-import type { ShellStyleName, ShellStyleStartCodeName } from './styleTypes';
+import type { ShellStyleFunc, ShellStyleName, ShellStyleStartCodeName } from './styleTypes';
 import type { NumberStyleName } from '../common/numberStyles';
 
 /**
@@ -107,6 +107,10 @@ export type MarkupOptions = {
    * Blank lines after formatted content.
    */
   spaceAfter?: number;
+  /**
+   * Blank lines between the paragraphs of formatted content.
+   */
+  spaceBetween?: number;
 };
 
 /**
@@ -161,6 +165,7 @@ export type MakeBlockOptions<AsArray extends boolean = false> = Pick<
   | 'lineSuffix'
   | 'spaceBefore'
   | 'spaceAfter'
+  | 'spaceBetween'
 > & {
   /**
    * Whether to return formatted lines as an array.
@@ -178,9 +183,9 @@ export type TextCase = 'upper' | 'lower' | 'title' | 'sentence' | 'capitalize';
  */
 export type FormatTextOptions = {
   /**
-   * Named style or list of ANSI style codes.
+   * Style function, named style, or list of ANSI style codes.
    */
-  style?: ShellTextStyle;
+  style?: ShellTextStyle | ShellStyleFunc;
   /**
    * Letter-case transformation.
    */

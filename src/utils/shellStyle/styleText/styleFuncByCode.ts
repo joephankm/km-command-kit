@@ -1,6 +1,8 @@
 import { capitalize } from '../common/textCases';
 import { ShellDecoration, ShellReset } from '../constants/shellStyleCodes';
+import type { ShellTextStyle } from '../types/markupTypes';
 import type { ShellStyleCodeName, ShellStyleFunc, ShellStyleStartCodeName } from '../types/styleTypes';
+import style from './presetStyles';
 import { STYLE_CODE_MAP, styleCode } from './styleCode';
 import { styleFunc } from './styleFunc';
 
@@ -37,3 +39,26 @@ export const closeCode = (names: readonly ShellStyleStartCodeName[]): string =>
  */
 export const styleFuncByCode = (names: readonly ShellStyleStartCodeName[]): ShellStyleFunc =>
   styleFunc(styleCode(names), closeCode(names));
+
+/**
+ * Get the style function of a text style: the preset style of that name, or one created from the
+ * start code names.
+ */
+export const textStyleFunc = (textStyle: ShellTextStyle): ShellStyleFunc =>
+  typeof textStyle === 'string' ? style[textStyle] : styleFuncByCode(textStyle);
+
+/**
+ * Map each named text style to its style function: the preset style of that name, or one created
+ * from the start code names.
+ */
+export const createStyleFuncMap = <Name extends string>(
+  styles: Record<Name, ShellTextStyle>
+): Record<Name, ShellStyleFunc> => {
+  const styleFuncMap = {} as Record<Name, ShellStyleFunc>;
+
+  for (const name in styles) {
+    styleFuncMap[name] = textStyleFunc(styles[name]);
+  }
+
+  return styleFuncMap;
+};

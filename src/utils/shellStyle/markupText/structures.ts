@@ -36,7 +36,7 @@ export const makeBlank = <AsArray extends boolean = false>(
  * - Returning a string or an array of lines.
  *
  * @example `parse the input now`, `{ width: 12, align: 'right' }` =>
- * `   parse the\n   input now\n`, or with `asArray`, `['   parse the', '   input now', '']`
+ * `   parse the\n   input now`, or with `asArray`, `['   parse the', '   input now']`
  */
 export const makeBlock = <AsArray extends boolean = false>(
   text: string | string[],
@@ -49,7 +49,8 @@ export const makeBlock = <AsArray extends boolean = false>(
     firstLinePrefix,
     lineSuffix,
     spaceBefore,
-    spaceAfter = 1,
+    spaceAfter,
+    spaceBetween,
     asArray,
   }: MakeBlockOptions<AsArray> = {}
 ): TextLines<AsArray> => {
@@ -71,13 +72,16 @@ export const makeBlock = <AsArray extends boolean = false>(
     if (padding === 'right' || padding === true) lineSuffix = (lineSuffix ?? '') + space;
   }
 
-  const after = spaceAfter ? makeBlank(spaceAfter, { asArray: true }) : undefined;
+  const between = spaceBetween ? makeBlank(spaceBetween, { asArray: true }) : undefined;
   const lines: string[] = spaceBefore ? makeBlank(spaceBefore, { asArray: true }) : [];
 
   const paragraphs = typeof text === 'string' ? text.split('\n') : text;
 
   for (let index = 0; index < paragraphs.length; index++) {
     const paragraph = paragraphs[index]!;
+
+    if (between && index > 0) lines.push(...between);
+
     if (width) {
       const firstPrefix = typeof firstLinePrefix === 'function' ? firstLinePrefix(index) : firstLinePrefix;
 
@@ -87,9 +91,9 @@ export const makeBlock = <AsArray extends boolean = false>(
     } else {
       lines.push(paragraph);
     }
-
-    if (after) lines.push(...after);
   }
+
+  if (spaceAfter) lines.push(...makeBlank(spaceAfter, { asArray: true }));
 
   return (asArray ? lines : lines.join('\n')) as TextLines<AsArray>;
 };
@@ -102,7 +106,7 @@ export const makeBlock = <AsArray extends boolean = false>(
  * - Wrapping, alignment, padding, and spacing.
  * - Returning a string or an array of lines.
  *
- * @example `['parse', 'validate']`, `{ indent: 2, width: 20 }` => `  • parse\n\n  • validate\n`
+ * @example `['parse', 'validate']`, `{ indent: 2, width: 20 }` => `  • parse\n  • validate`
  */
 export const makeList = <AsArray extends boolean = false>(
   items: string[],
@@ -153,7 +157,7 @@ export const makeList = <AsArray extends boolean = false>(
     }
   }
 
-  // The block spaces after every item; the list spaces once, after its last item.
+  // The items sit together, with no blank lines between them.
   const lines = makeBlock(items, {
     width,
     align,
@@ -162,11 +166,9 @@ export const makeList = <AsArray extends boolean = false>(
     firstLinePrefix,
     linePrefix,
     spaceBefore,
-    spaceAfter: 0,
+    spaceAfter,
     asArray: true,
   });
-
-  if (spaceAfter) lines.push(...makeBlank(spaceAfter, { asArray: true }));
 
   return (asArray ? lines : lines.join('\n')) as TextLines<AsArray>;
 };

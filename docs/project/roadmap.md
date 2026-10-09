@@ -52,12 +52,12 @@ Build the capabilities for processing the command line — reading arguments and
 information.
 
 | Step    | Name                      | Status     | Purpose                                                                                         |
-| ------- | ------------------------- | ---------- |-------------------------------------------------------------------------------------------------|
-| `1.2.1` | Add Rich Text Formatting  | 🟡 Planned | Provide capabilities for displaying structured text in the terminal, such as lists and indents. |
-| `1.2.2` | Add Template-Based Logger | 🟡 Planned | Provide a function that builds a logger from a template, so a command can generate its own.     |
-| `1.2.3` | Add Command Parsing       | 🟡 Planned | Provide a function that reads a command's arguments and options and returns them structured.    |
-| `1.2.4` | Add Command Manual        | 🟡 Planned | Provide usage text for a command, shown on a help request and when a call is rejected.          |
-| `1.2.5` | Add Command Validation    | 🟡 Planned | Check a call against what the command accepts, and reject it with the manual when it does not.  |
+|---------| ------------------------- |------------|-------------------------------------------------------------------------------------------------|
+| `1.2.1` | Add Rich Text Formatting  | 🟢 Usable  | Provide capabilities for displaying structured text in the terminal, such as lists and indents. |
+| `1.2.2` | Add Command Parsing       | 🟡 Planned | Provide a function that reads a command's arguments and options and returns them structured.    |
+| `1.2.3` | Add Command Manual        | 🟡 Planned | Provide usage text for a command, shown on a help request and when a call is rejected.          |
+| `1.2.4` | Add Command Validation    | 🟡 Planned | Check a call against what the command accepts, and reject it with the manual when it does not.  |
+| `1.2.5` | Add Template-Based Logger | 🟡 Planned | Provide a function that builds a logger from a template, so a command can generate its own.     |
 | `1.2.6` | Add Command Runner        | 🟡 Planned | Call the matching function in a command file from the input, so a small handler needs no file.  |
 
 **🎯 Phase 3 — Build Environment Configuration**

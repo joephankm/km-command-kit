@@ -4,111 +4,215 @@ import type { MarkupOptions, ShellTextStyle } from '../../shellStyle/types/marku
 import type { BulletListType, NumberedListType } from '../configs/docLogConfig';
 
 /**
- * Names of the title variants a doc's parts open with.
+ * Names of the title variants used in a document log.
  */
 export type TitleVariantName = 'docTitle' | 'title' | 'subTitle' | 'heading';
 
 /**
- * A number type with the marker set after each number, such as `['upperRoman', '.']` for `I.`.
+ * Number format and marker pair for a numbered title.
+ *
+ * @example `['upperRoman', '.']` => `I.`
  */
 export type NumberMarker = [numberType: NumberStyleName, marker: string];
 
 /**
- * How one title variant is printed: its style, and the number its titles are numbered with.
+ * Presentation settings for one title variant.
  */
 export type TitleVariant = {
   /**
-   * Style of the title's text.
+   * Text style for the title variant.
    */
   style: ShellTextStyle;
   /**
-   * Number type and marker the variant's titles are numbered with; unset, they are not numbered.
+   * Number format and marker for titles in this variant.
+   *
+   * @default No numbering.
    */
   numberMarker?: NumberMarker;
+  /**
+   * Whether titles in this variant have an underline.
+   */
+  underline?: boolean;
+  /**
+   * Character repeated across the underline.
+   *
+   * @default '─'
+   */
+  lineFill?: string;
 };
 
 /**
- * Shared options for the doc log and its methods.
+ * Named text styles available to document log methods.
+ */
+export type DocLogStyles = Partial<Record<'default' | 'divider' | (string & {}), ShellTextStyle>>;
+
+/**
+ * Style reference accepted by document log methods.
+ */
+export type DocLogStyle = ShellTextStyle | (string & {});
+
+/**
+ * Configuration options for a document log and its methods.
  */
 export type DocLogOptions = Pick<MarkupOptions, 'width' | 'padding' | 'paddingSize' | 'align'> & {
   /**
-   * Style of a body's text.
+   * Named styles available to document log methods.
    */
-  style?: ShellTextStyle;
+  styles?: DocLogStyles;
   /**
-   * How each title variant is printed.
+   * Per-call style that overrides the method's usual text style.
+   */
+  style?: DocLogStyle;
+  /**
+   * Presentation settings for each title variant.
+   *
+   * @default Title variants from `docLogConfig`.
    */
   titles?: Record<TitleVariantName, TitleVariant>;
   /**
-   * Whether every block's content is justified instead of aligned left.
+   * Whether block content uses justified alignment.
+   *
+   * @default `false`
    */
   justifyContent?: boolean;
   /**
-   * Default number of blank lines between blocks, and between the paragraphs of a body.
+   * Blank lines between blocks and between body paragraphs.
+   *
+   * @default `1`
    */
   spacing?: number;
   /**
-   * Bulleted list style a bulleted list is marked in.
+   * Marker pattern for bulleted lists.
+   *
+   * @default `'geometric'`
    */
   bulletListType?: BulletListType;
   /**
-   * Numbered list style a numbered list is numbered in.
+   * Number format and marker pattern for numbered lists.
+   *
+   * @default `'decimal'`
    */
   numberedListType?: NumberedListType;
   /**
-   * Title variant a title is printed in.
+   * Indentation, in columns, for each list level. Deeper levels reuse the last entry.
+   *
+   * @default `[0, 2, 6, 10]`
+   */
+  listIndents?: number[];
+  /**
+   * Character repeated across a divider.
+   *
+   * @default `'─'`
+   */
+  dividerFill?: string;
+  /**
+   * Variant used to format a title.
    */
   variant?: TitleVariantName;
   /**
-   * Whether a title is numbered, overriding whether its variant has a number type.
+   * Whether the title is numbered, overriding its variant's numbering setting.
+   *
+   * @default `false`
    */
   numbered?: boolean;
   /**
-   * Whether a divider is printed before a title, kept apart from it by `spacing`.
+   * Whether to print a divider before the title.
+   *
+   * @default `false`
    */
   dividerBefore?: boolean;
   /**
-   * Whether a line is drawn right under a title, with no blank line between.
+   * Whether to print an underline directly below the title.
    */
-  lineBelow?: boolean;
+  underline?: boolean;
   /**
-   * Number of blank lines before a block, in place of `spacing`.
+   * Blank lines before the block, overriding `spacing`.
    */
   spaceBefore?: number;
   /**
-   * Number of blank lines after a block, in place of `spacing`.
+   * Blank lines after the block, overriding `spacing`.
    */
   spaceAfter?: number;
+  /**
+   * Character used for this divider, overriding `dividerFill`.
+   */
+  fill?: string;
 };
 
 /**
- * Options fixed for every method of a doc log instance.
+ * Settings shared by every method of a document log instance.
  */
 export type DocLogSettings = Pick<
   DocLogOptions,
   | 'width'
   | 'padding'
   | 'paddingSize'
-  | 'style'
+  | 'styles'
   | 'titles'
   | 'justifyContent'
   | 'spacing'
-  | 'bulletListType'
-  | 'numberedListType'
->;
+  | 'listIndents'
+  | 'dividerFill'
+> &
+  Required<Pick<DocLogOptions, 'bulletListType' | 'numberedListType'>>;
 
 /**
- * Options for printing a title.
+ * Per-title formatting options.
  */
-export type TitleOptions = Pick<DocLogOptions, 'numbered' | 'dividerBefore' | 'lineBelow' | 'align' | 'spaceBefore'> &
+export type TitleOptions = Pick<DocLogOptions, 'numbered' | 'dividerBefore' | 'underline' | 'align' | 'spaceBefore'> &
   Required<Pick<DocLogOptions, 'variant'>>;
 
 /**
- * Title variant name, or the full options for printing a title.
+ * Title variant identifier or complete per-title options.
  */
 export type TitleVariantOrOptions = ValueOrParams<TitleOptions, 'variant'>;
 
 /**
- * Options for printing a body.
+ * Per-call formatting options for body text.
  */
-export type BodyOptions = Pick<DocLogOptions, 'align' | 'spaceBefore' | 'spaceAfter'>;
+export type BodyOptions = Pick<DocLogOptions, 'align' | 'style' | 'spaceBefore' | 'spaceAfter'>;
+
+/**
+ * Per-call formatting options for a divider.
+ */
+export type DividerOptions = Pick<DocLogOptions, 'style' | 'spaceBefore' | 'spaceAfter' | 'fill'>;
+
+/**
+ * Structured content for one list item.
+ */
+export type ListItemParams = {
+  /**
+   * Text displayed for the item.
+   */
+  text?: string;
+  /**
+   * Child items displayed one level deeper.
+   */
+  items?: ListItem[];
+  /**
+   * Whether this item's child list is numbered, overriding the list setting.
+   */
+  numbered?: boolean;
+};
+
+/**
+ * Text or structured content for a list item.
+ */
+export type ListItem = string | ListItemParams;
+
+/**
+ * A list item that may specify its nesting level.
+ */
+export type TopListItem =
+  | string
+  | (ListItemParams & {
+      /**
+       * Display level for the item, starting at `1`.
+       */
+      level?: number;
+    });
+
+/**
+ * Per-list formatting options.
+ */
+export type ListOptions = Pick<DocLogOptions, 'numbered' | 'align' | 'spaceBefore' | 'spaceAfter'>;

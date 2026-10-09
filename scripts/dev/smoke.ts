@@ -1,12 +1,10 @@
 import docLog from '@/utils/shellLog/docLog/docLog';
 
-const doc = docLog({ width: 30, style: undefined });
+const doc = docLog({ width: 40 });
 
-doc.title('Command Kit', { variant: 'docTitle', lineBelow: true });
-doc.title('Install', 'title');
-doc.body('Download the kit and run it.');
-doc.title('Requirements for a long subtitle that wraps', 'subTitle');
-doc.title('Example', { variant: 'heading', align: 'right' });
-doc.title('Usage', { variant: 'title', dividerBefore: true });
-doc.title('Appendix', { variant: 'title', numbered: false });
-console.log('--- end ---');
+doc.title('Command Kit', 'docTitle');
+doc.title('Install', { variant: 'title', numbered: true });
+doc.body('Download the kit, then run it from the root of your project.');
+doc.list(['Download', { text: 'Configure', items: ['Set the token', 'Pick a region'] }, 'Run']);
+doc.title('Usage', { variant: 'title', numbered: true, dividerBefore: true });
+doc.list(['Build', 'Test', 'Release'], { numbered: true });

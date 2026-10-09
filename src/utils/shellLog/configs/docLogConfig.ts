@@ -1,4 +1,4 @@
-import type { DocLogSettings, NumberMarker } from '../types/docLogTypes';
+import { DocLogSettings, NumberMarker } from '../types/docLogTypes';
 
 /**
  * Names of the bulleted list styles available in this configuration.
@@ -20,14 +20,17 @@ const docLogSettings: DocLogSettings = {
   paddingSize: 1,
   justifyContent: false,
   spacing: 1,
+  styles: {},
   titles: {
     docTitle: { style: 'title' },
-    title: { style: 'heading', numberMarker: ['upperRoman', '.'] },
+    title: { style: 'heading', numberMarker: ['upperRoman', '.'], underline: true },
     subTitle: { style: 'emphasize', numberMarker: ['upperAlpha', '.'] },
-    heading: { style: 'subtle', numberMarker: ['decimal', '.'] },
+    heading: { style: 'subtle', numberMarker: ['decimal', ')'] },
   },
   bulletListType: 'geometric',
   numberedListType: 'decimal',
+  listIndents: [0, 2, 6, 10],
+  dividerFill: '─',
 };
 
 /**

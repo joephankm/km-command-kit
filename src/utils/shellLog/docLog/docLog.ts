@@ -1,114 +1,132 @@
-import { NUMBER_STYLES } from '../../shellStyle/common/numberStyles';
 import { markup } from '../../shellStyle';
-import type { FormatTextOptions, TextAlign } from '../../shellStyle/types/markupTypes';
-import { makeToParams } from '../common/paramUtils';
+import { createStyleFuncMap, textStyleFunc } from '../../shellStyle/styleText/styleFuncByCode';
+import type { ShellTextStyle, TextAlign } from '../../shellStyle/types/markupTypes';
+import type { ShellStyleFunc } from '../../shellStyle/types/styleTypes';
 import config from '../configs/docLogConfig';
-import type {
-  BodyOptions,
-  DocLogSettings,
-  TitleOptions,
-  TitleVariantName,
-  TitleVariantOrOptions,
-} from '../types/docLogTypes';
+import buildBody from './buildBody';
+import buildDivider from './buildDivider';
+import buildList from './buildList';
+import buildTitle from './buildTitle';
+import type { DocLogSettings, DocLogStyle } from '../types/docLogTypes';
 
 /**
- * Convert a title's variant argument into title options; a bare name is treated as the variant.
+ * Alignment resolution for a document block.
  */
-const titleOptions = makeToParams<TitleOptions, 'variant'>('variant');
+export type DefaultAlignFunc = (align: TextAlign | undefined) => TextAlign | undefined;
 
 /**
- * Create a doc log instance, with the given options laid over the configured settings for every
- * method it carries.
+ * Leading spacing for a document block.
  */
-const docLog = (options: DocLogSettings = {}) => {
-  const {
-    width,
-    padding,
-    paddingSize,
-    justifyContent,
-    spacing = 0,
-    style,
-    titles,
-  } = { ...config.settings, ...options };
+export type StartLinesFunc = (spaceBefore: number | undefined) => string[];
 
-  // How many titles of each variant have been numbered so far.
-  const titleCounts: Partial<Record<TitleVariantName, number>> = {};
+/**
+ * Trailing spacing and output for a document block.
+ */
+export type EndPrintLinesFunc = (lines: string[], spaceAfter?: number) => void;
 
-  type AlignInput = TextAlign | undefined;
-  const defaultAlign = justifyContent ? (align: AlignInput) => align ?? 'justify' : (align: AlignInput) => align;
+/**
+ * Shared helpers used to create document log methods.
+ */
+export type DocLogFuncs = {
+  /**
+   * Style function for a named or custom style.
+   */
+  styleFuncOf: (style: DocLogStyle) => ShellStyleFunc | undefined;
+  /**
+   * Alignment resolved from block options and document settings.
+   */
+  defaultAlign: DefaultAlignFunc;
+  /**
+   * Leading lines prepared for a block.
+   */
+  startLines: StartLinesFunc;
+  /**
+   * Trailing spacing and printed output for a block.
+   */
+  endPrintLines: EndPrintLinesFunc;
+};
 
-  const pushSpace = (lines: string[], type: 'before' | 'after', addingSpacing: number | undefined) => {
-    if (addingSpacing !== undefined && (type === 'before' ? addingSpacing > spacing : addingSpacing < spacing)) {
-      lines.push(markup.makeBlank(addingSpacing - spacing - 1));
+/**
+ * Create a document log with shared settings for its output methods.
+ */
+const docLog = (options: Partial<DocLogSettings> = {}) => {
+  // Apply instance options over the configured settings.
+  const settings = { ...config.settings, ...options };
+
+  const { justifyContent, spacing = 0 } = settings;
+
+  // Merge instance styles over configured styles and cache their formatter functions.
+  const styleFuncMap = createStyleFuncMap({ ...config.settings.styles, ...options.styles } as Record<
+    string,
+    ShellTextStyle
+  >);
+
+  /**
+   * Resolve a style for document text.
+   */
+  const styleFuncOf = (style: DocLogStyle): ShellStyleFunc | undefined =>
+    typeof style === 'string' && style in styleFuncMap ? styleFuncMap[style] : textStyleFunc(style as ShellTextStyle);
+
+  /**
+   * Resolve the alignment for a document block.
+   */
+  const defaultAlign: DefaultAlignFunc = justifyContent ? align => align ?? 'justify' : align => align;
+
+  // Track trailing spacing so it can be printed before the next block.
+  let spaceAfterLast = false;
+
+  /**
+   * Prepare leading spacing for a block.
+   *
+   * Use block-specific spacing when provided; otherwise use the document's configured spacing.
+   */
+  const startLines: StartLinesFunc = spaceBefore => {
+    if (spaceAfterLast) {
+      spaceAfterLast = false;
+      return [];
     }
+
+    const count = spaceBefore ?? spacing;
+    return count ? [markup.makeBlank(count - 1)] : [];
   };
 
   /**
-   * Make a line across the full width, in the given style.
+   * Print a document block with its requested trailing spacing.
    */
-  const makeLine = (lineStyle: FormatTextOptions) =>
-    markup.formatText(markup.displayLine('', { width, fill: '─' }), lineStyle);
+  const endPrintLines: EndPrintLinesFunc = (lines, spaceAfter) => {
+    if (spaceAfter) {
+      spaceAfterLast = true;
+      lines.push(markup.makeBlank(spaceAfter - 1));
+    }
+
+    console.log(lines.join('\n'));
+  };
+
+  // Helpers shared with each method builder.
+  const docFunctions: DocLogFuncs = { styleFuncOf, defaultAlign, startLines, endPrintLines };
+
+  const divider = buildDivider(settings, docFunctions);
 
   return {
     /**
-     * Print a title.
+     * Print a formatted title.
      */
-    title: (text: string, variantOrOptions: TitleVariantOrOptions) => {
-      const { numbered, dividerBefore, lineBelow, spaceBefore, align, variant } = titleOptions(variantOrOptions);
-      const { style: titleStyle, numberMarker } = titles?.[variant] ?? {};
-
-      const lines: string[] = [];
-
-      // The blank lines `spacing` left after the block before count toward `spaceBefore`.
-      pushSpace(lines, 'before', spaceBefore);
-
-      // The divider is a block of its own, so `spacing` keeps it apart from the title.
-      if (dividerBefore && width) {
-        lines.push(makeLine({ style: 'border' }));
-        if (spacing) lines.push(markup.makeBlank(spacing - 1));
-      }
-
-      if (numbered && numberMarker) {
-        const [numberType, marker] = numberMarker;
-        const count = (titleCounts[variant] ?? 0) + 1;
-
-        titleCounts[variant] = count;
-        text = NUMBER_STYLES[numberType](count) + marker + ' ' + text;
-      }
-
-      const block = markup.makeBlock(text, { width, padding, paddingSize, align: defaultAlign(align), spaceAfter: 0 });
-
-      lines.push(titleStyle ? markup.formatText(block, { style: titleStyle }) : block);
-
-      // The line is part of the title, so it sits right under it.
-      if (lineBelow && width) lines.push(makeLine({ style: titleStyle }));
-
-      console.log(lines.join('\n'));
-    },
+    title: buildTitle(settings, docFunctions, divider),
 
     /**
-     * Print body text.
+     * Print formatted body text.
      */
-    body: (text: string, { align, spaceBefore, spaceAfter }: BodyOptions = {}) => {
-      const lines: string[] = [];
+    body: buildBody(settings, docFunctions),
 
-      // The blank lines `spacing` left after the block before count toward `spaceBefore`.
-      pushSpace(lines, 'before', spaceBefore);
+    /**
+     * Print a divider across the document width.
+     */
+    divider,
 
-      // The paragraphs are kept apart by `spacing`, which the block also sets after its last one.
-      const block = markup.makeBlock(text, {
-        width,
-        padding,
-        paddingSize,
-        align: defaultAlign(align),
-        spaceAfter: spacing,
-      });
-      lines.push(style ? markup.formatText(block, { style }) : block);
-
-      pushSpace(lines, 'after', spaceAfter);
-
-      console.log(lines.join('\n'));
-    },
+    /**
+     * Print a formatted list.
+     */
+    list: buildList(settings, docFunctions),
   };
 };
 
