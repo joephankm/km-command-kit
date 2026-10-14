@@ -41,10 +41,10 @@ Build the core capabilities for styling, logging, and displaying information in 
 
 | Step    | Name                             | Status         | Purpose                                                                                        |
 | ------- | -------------------------------- |----------------|------------------------------------------------------------------------------------------------|
-| `1.1.1` | Build Terminal Styling Utilities | 🟦 Implemented | Provide utilities for styling terminal output, such as text colors and value-based formatting. |
+| `1.1.1` | Build Terminal Styling Utilities | 🟩 Completed   | Provide utilities for styling terminal output, such as text colors and value-based formatting. |
 | `1.1.2` | Implement Terminal Logger        | 🟩 Completed   | Provide a reusable logger for displaying structured information in the terminal.               |
 | `1.1.3` | Add Process Logging              | 🟦 Implemented | Provide capabilities for displaying and tracking process information in the terminal.          |
-| `1.1.4` | Add Terminal Drawing             | 🟩 Completed   | Provide capabilities for drawing or rendering visual elements in the terminal.                 |
+| `1.1.4` | Add Terminal Drawing             | 🟦 Implemented | Provide capabilities for drawing or rendering visual elements in the terminal.                 |
 
 **🧰 Phase 2 — Establish Command Line Interface**
 
@@ -54,7 +54,7 @@ information.
 | Step    | Name                      | Status     | Purpose                                                                                         |
 |---------| ------------------------- |------------|-------------------------------------------------------------------------------------------------|
 | `1.2.1` | Add Rich Text Formatting  | 🟢 Usable  | Provide capabilities for displaying structured text in the terminal, such as lists and indents. |
-| `1.2.2` | Add Command Parsing       | 🔵 Started | Provide a function that reads a command's arguments and options and returns them structured.    |
+| `1.2.2` | Add Command Parsing       | 🟢 Usable  | Provide a function that reads a command's arguments and options and returns them structured.    |
 | `1.2.3` | Add Command Manual        | 🟡 Planned | Provide usage text for a command, shown on a help request and when a call is rejected.          |
 | `1.2.4` | Add Command Validation    | 🟡 Planned | Check a call against what the command accepts, and reject it with the manual when it does not.  |
 | `1.2.5` | Add Template-Based Logger | 🟡 Planned | Provide a function that builds a logger from a template, so a command can generate its own.     |

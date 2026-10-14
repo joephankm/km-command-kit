@@ -1,17 +1,20 @@
 import { parseArgs } from 'node:util';
-import type { CmdParams, CmdParseArgsConfig, CmdParseResult } from '../types/parseCommandTypes';
+import type { CmdParams, CmdParseResult } from '../types/parseCommandTypes';
+import { toArgValues } from './argHelpers';
 
 /**
  * Parse the command's input from `process.argv` into its options and arguments.
  */
-const parseCommand = <T extends CmdParams>({ options, argsStart = 2 }: T): CmdParseResult<T> => {
-  const { values, positionals } = parseArgs<CmdParseArgsConfig<T>>({
+export default <T extends CmdParams>({ options, args, argsStart = 2 }: T): CmdParseResult<T> => {
+  const { values, positionals } = parseArgs({
     args: process.argv.slice(argsStart),
     options,
     allowPositionals: true,
   });
 
-  return { options: values, args: positionals };
-};
+  const result = args
+    ? { options: values, positionals, args: toArgValues(positionals, args) }
+    : { options: values, positionals };
 
-export default parseCommand;
+  return result as CmdParseResult<T>;
+};
