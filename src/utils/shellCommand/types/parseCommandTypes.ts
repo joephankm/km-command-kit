@@ -31,15 +31,56 @@ export type CmdOptionDef = Omit<CmdDefParseOptions, 'position' | 'fromPosition' 
 export type CmdArgumentDef = Omit<CmdDefParseOptions, 'multiple' | 'short'>;
 
 /**
+ * A set of items given flat, keyed by name, or as titled groups of such sets.
+ */
+export type GroupedOrFlat<I> = Record<string, I> | readonly { title: string; items: Record<string, I> }[];
+
+/**
+ * A union of types merged into one intersection.
+ */
+type UnionToIntersection<U> = (U extends unknown ? (value: U) => void : never) extends (value: infer I) => void
+  ? I
+  : never;
+
+/**
+ * A grouped-or-flat set merged into one flat set, keyed by name.
+ */
+export type FlattenGroups<S> = S extends readonly { items: infer R }[] ? UnionToIntersection<R> : S;
+
+/**
+ * One block of the manual's Definitions section.
+ */
+export type CmdManualDefinition = {
+  /** The title the block is shown under. */
+  title: string;
+  /** What the block shows. */
+  content: string;
+};
+
+/**
+ * What the manual shows for a command.
+ */
+export type CmdManualParams = {
+  /** What the command does, for the Description section. */
+  description?: string;
+  /** Sample calls to the command, for the Examples section. */
+  examples?: string[];
+  /** The Definitions section's blocks, in the order given, or keyed by name to customize it. */
+  definitions?: CmdManualDefinition[] | Record<string, CmdManualDefinition>;
+};
+
+/**
  * The input `parseCommand` takes, declaring the command's options and arguments.
  */
 export type CmdParams = {
-  /** The command's options, keyed by their long name. */
-  options?: Record<string, CmdOptionDef>;
+  /** The command's options, keyed by their long name, given flat or in groups. */
+  options?: GroupedOrFlat<CmdOptionDef>;
   /** The command's arguments, keyed by their name. */
   args?: Record<string, CmdArgumentDef>;
   /** The index in `process.argv` where parsing begins. Defaults to `2`. */
   argsStart?: number;
+  /** What the manual shows for the command; with no `manual`, the command has no manual. */
+  manual?: CmdManualParams;
 };
 
 /**
@@ -58,8 +99,8 @@ export type CmdParsedValue<D extends CmdOptionDef | CmdArgumentDef> =
 /**
  * Each definition of a set mapped to its parsed value, keyed by the same name.
  */
-type CmdParsedValues<R extends Record<string, CmdOptionDef | CmdArgumentDef>> = {
-  [K in keyof R]: CmdParsedValue<R[K]>;
+type CmdParsedValues<R> = {
+  [K in keyof R]: R[K] extends CmdOptionDef | CmdArgumentDef ? CmdParsedValue<R[K]> : never;
 };
 
 /**
@@ -67,8 +108,8 @@ type CmdParsedValues<R extends Record<string, CmdOptionDef | CmdArgumentDef>> = 
  */
 export type CmdParseResult<T extends CmdParams> = {
   /** The parsed options, keyed by their long name; empty when no options are declared. */
-  options: T extends { options: infer O extends Record<string, CmdOptionDef> }
-    ? CmdParsedValues<O>
+  options: T extends { options: infer O extends GroupedOrFlat<CmdOptionDef> }
+    ? CmdParsedValues<FlattenGroups<O>>
     : Record<string, never>;
   /** The raw arguments, in the order they were given. */
   positionals: string[];

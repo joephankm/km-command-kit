@@ -4,8 +4,8 @@ description:
   Command handling — reads the options and arguments a command was called with from `process.argv` and returns them in a
   typed, structured shape.
 labels: ['shell', 'terminal', 'command', 'argv', 'parse']
-version: 0.1.1
-updated: 2026-10-14
+version: 0.2.0
+updated: 2026-10-15
 ---
 
 # Shell Command
