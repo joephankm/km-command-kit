@@ -1,6 +1,6 @@
 import { formatText } from './formatters';
 import { displayLine } from './layouts';
-import { makeBlank, makeBlock, makeList } from './structures';
+import { makeBlank, makeBlock, makeColumns, makeList } from './structures';
 
 export default {
   formatText,
@@ -8,4 +8,5 @@ export default {
   makeBlank,
   makeBlock,
   makeList,
+  makeColumns,
 };

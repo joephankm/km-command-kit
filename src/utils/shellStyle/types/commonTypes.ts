@@ -8,3 +8,9 @@ export type ValueOrParams<Params, Key extends keyof Params> = Params[Key] | Para
  * by position without conversion.
  */
 export type ArrayOrIndexed<T> = (T | undefined)[] | Record<number, T>;
+
+/**
+ * A single value for every position, or a numeric-keyed object setting the value of each position
+ * it names.
+ */
+export type ValueOrIndexed<T> = T | Record<number, T>;

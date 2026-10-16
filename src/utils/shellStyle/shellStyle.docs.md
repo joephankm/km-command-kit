@@ -3,7 +3,7 @@ name: shellStyle
 description:
   Add ANSI text styles and draw terminal boxes and rules with semantic presets or custom SGR codes.
 labels: ['shell', 'ansi', 'terminal', 'style', 'box', 'markup']
-version: 1.4.1
+version: 1.5.0
 updated: 2026-10-06
 ---
 
@@ -457,7 +457,5 @@ want list markers, wrapping, or alignment.
 - **Improvement:** Split Draw Box **[🔶 Medium]**\
   _(Have `drawBox` return each line as a string instead of printing it, and move the printing — `buildBox` and its
   methods — into a `shellLog` component that logs what `drawBox` returns)_
-- **Feature:** Markup Columns **[🔶 Medium]**\
-  _(Sets content in columns without borders, each column aligned on its own, for description displays such as a TUI's)_
 - **Feature:** Markup Quote **[🔶 Medium]**\
   _(Sets content off as a quote behind a border on the left, on both sides, or all round as a box)_

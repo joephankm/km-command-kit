@@ -4,6 +4,7 @@ import type { ShellTextStyle, TextAlign } from '../../shellStyle/types/markupTyp
 import type { ShellStyleFunc } from '../../shellStyle/types/styleTypes';
 import config from '../configs/docLogConfig';
 import buildBody from './buildBody';
+import buildColumns from './buildColumns';
 import buildDivider from './buildDivider';
 import buildList from './buildList';
 import buildTitle from './buildTitle';
@@ -127,6 +128,11 @@ const docLog = (options: Partial<DocLogSettings> = {}) => {
      * Print a formatted list.
      */
     list: buildList(settings, docFunctions),
+
+    /**
+     * Print rows of content in columns.
+     */
+    columns: buildColumns(settings, docFunctions),
   };
 };
 

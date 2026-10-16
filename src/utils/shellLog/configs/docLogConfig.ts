@@ -15,9 +15,7 @@ export type NumberedListType = 'decimal' | 'outline';
  * any of them.
  */
 const docLogSettings: DocLogSettings = {
-  width: 80,
-  // `padding` is left unset, so content has no padding unless an instance asks for it.
-  paddingSize: 1,
+  // width: 80,
   justifyContent: false,
   spacing: 1,
   styles: {},

@@ -95,7 +95,8 @@ export default (widths: number[], options: BuildBoxOptions = {}) => {
           width,
           align: borderParams.align,
           fill: ' ',
-          padding: true,
+          indent: 1,
+          rightIndent: 1,
         });
 
         // Pause the border styling around the content, then apply it again after the cell.
@@ -169,7 +170,8 @@ export default (widths: number[], options: BuildBoxOptions = {}) => {
           width,
           align,
           fill: ' ',
-          padding: true,
+          indent: 1,
+          rightIndent: 1,
         });
         const cellStyle = style ?? rowOptions?.style ?? options.style;
 

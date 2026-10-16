@@ -15,11 +15,11 @@ const toItemParams = makeToParams<ListItemParams, 'text'>('text');
  * Create the list-printing method for a document log.
  */
 export default (
-  { width, padding, paddingSize, bulletListType, numberedListType, listIndents }: DocLogSettings,
+  { width, indent: docIndent = 0, rightIndent, bulletListType, numberedListType, listIndents }: DocLogSettings,
   { defaultAlign, startLines, endPrintLines }: DocLogFuncs
 ) => {
-  // Shared width and padding for list items.
-  const blockOptions = { width, padding, paddingSize };
+  // Shared width and right indent for list items.
+  const blockOptions = { width, rightIndent };
 
   // Marker styles by level; reuse the configured sequence for deeper levels.
   const bullets = config.bulletListStyles[bulletListType];
@@ -36,7 +36,7 @@ export default (
     align: TextAlign | undefined
   ) => {
     // Reuse the final configured indent for deeper levels; default all levels to zero.
-    const indent = listIndents?.length ? listIndents[Math.min(level, listIndents.length) - 1] : 0;
+    const indent = docIndent + (listIndents?.length ? listIndents[Math.min(level, listIndents.length) - 1]! : 0);
     let textBag: string[] = [];
 
     // Keep numbering continuous within this level and align numbers to a shared width.

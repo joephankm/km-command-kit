@@ -1,6 +1,7 @@
 import { NUMBER_STYLES } from '../common/numberStyles';
-import type { MakeBlockOptions, MakeListOptions, TextLines } from '../types/markupTypes';
-import { stripStyles, wrapText } from './stringUtils';
+import { ColumnContent, MakeBlockOptions, MakeColumnsOptions, MakeListOptions, TextLines } from '../types/markupTypes';
+import { buildColumns, getColumnWidths, processContents } from './columnUtils';
+import { alignLine, stripStyles, wrapText } from './stringUtils';
 
 /**
  * Options for blank lines: whether they come back as an array.
@@ -32,7 +33,7 @@ export const makeBlank = <AsArray extends boolean = false>(
  *
  * Supports:
  * - Multiple paragraphs, wrapping, and alignment.
- * - Line prefixes and suffixes, padding, and surrounding blank lines.
+ * - Line prefixes and suffixes, left and right indents, and surrounding blank lines.
  * - Returning a string or an array of lines.
  *
  * @example `parse the input now`, `{ width: 12, align: 'right' }` =>
@@ -43,8 +44,8 @@ export const makeBlock = <AsArray extends boolean = false>(
   {
     width,
     align,
-    padding,
-    paddingSize = 1,
+    indent,
+    rightIndent,
     linePrefix,
     firstLinePrefix,
     lineSuffix,
@@ -54,23 +55,22 @@ export const makeBlock = <AsArray extends boolean = false>(
     asArray,
   }: MakeBlockOptions<AsArray> = {}
 ): TextLines<AsArray> => {
-  // Padding sits outermost: before the prefixes, and after the suffix.
-  if (padding) {
-    const space = ' '.repeat(paddingSize);
+  const indentSpace = indent ? ' '.repeat(indent) : '';
 
-    if (padding === 'left' || padding === true) {
-      linePrefix = space + (linePrefix ?? '');
+  // The indent sits outermost, before the prefixes.
+  if (width && indentSpace) {
+    linePrefix = indentSpace + (linePrefix ?? '');
 
-      if (typeof firstLinePrefix === 'function') {
-        const prefixFunc = firstLinePrefix;
-        firstLinePrefix = index => space + prefixFunc(index);
-      } else if (firstLinePrefix !== undefined) {
-        firstLinePrefix = space + firstLinePrefix;
-      }
+    if (typeof firstLinePrefix === 'function') {
+      const prefixFunc = firstLinePrefix;
+      firstLinePrefix = index => indentSpace + prefixFunc(index);
+    } else if (firstLinePrefix !== undefined) {
+      firstLinePrefix = indentSpace + firstLinePrefix;
     }
-
-    if (padding === 'right' || padding === true) lineSuffix = (lineSuffix ?? '') + space;
   }
+
+  // The right indent pulls the right edge in from the width.
+  const lineWidth = width && rightIndent ? width - rightIndent : width;
 
   const between = spaceBetween ? makeBlank(spaceBetween, { asArray: true }) : undefined;
   const lines: string[] = spaceBefore ? makeBlank(spaceBefore, { asArray: true }) : [];
@@ -82,14 +82,20 @@ export const makeBlock = <AsArray extends boolean = false>(
 
     if (between && index > 0) lines.push(...between);
 
-    if (width) {
+    if (lineWidth) {
       const firstPrefix = typeof firstLinePrefix === 'function' ? firstLinePrefix(index) : firstLinePrefix;
 
       lines.push(
-        ...wrapText(paragraph, width, { align, linePrefix, firstLinePrefix: firstPrefix, lineSuffix, asArray: true })
+        ...wrapText(paragraph, lineWidth, {
+          align,
+          linePrefix,
+          firstLinePrefix: firstPrefix,
+          lineSuffix,
+          asArray: true,
+        })
       );
     } else {
-      lines.push(paragraph);
+      lines.push(indentSpace + paragraph);
     }
   }
 
@@ -103,7 +109,7 @@ export const makeBlock = <AsArray extends boolean = false>(
  *
  * Supports:
  * - Indentation, custom markers, and numbered or bulleted items.
- * - Wrapping, alignment, padding, and spacing.
+ * - Wrapping, alignment, right indent, and spacing.
  * - Returning a string or an array of lines.
  *
  * @example `['parse', 'validate']`, `{ indent: 2, width: 20 }` => `  • parse\n  • validate`
@@ -119,8 +125,7 @@ export const makeList = <AsArray extends boolean = false>(
     numberWidth,
     marker = numbered ? '.' : '•',
     align,
-    padding,
-    paddingSize = 1,
+    rightIndent,
     spaceBefore,
     spaceAfter,
     asArray,
@@ -161,14 +166,91 @@ export const makeList = <AsArray extends boolean = false>(
   const lines = makeBlock(items, {
     width,
     align,
-    padding,
-    paddingSize,
+    rightIndent,
     firstLinePrefix,
     linePrefix,
     spaceBefore,
     spaceAfter,
     asArray: true,
   });
+
+  return (asArray ? lines : lines.join('\n')) as TextLines<AsArray>;
+};
+
+/**
+ * Formats content in columns, without borders.
+ *
+ * Supports:
+ * - One inline row, given as `string[]`, or a block of rows, given as `string[][]`.
+ * - A total width shared equally among the columns, or a width for each column by position.
+ * - Columns without a width, showing their content as it is.
+ * - Returning a string or an array of lines.
+ *
+ * @example `[['name', 'value'], ['indent', '2']]`, `{ width: [6, 5] }` =>
+ * `name   value\nindent 2    `
+ */
+export const makeColumns = <AsArray extends boolean = false>(
+  contents: ColumnContent[] | ColumnContent[][],
+  {
+    width,
+    align,
+    gap = 1,
+    indent,
+    linePrefix = '',
+    lineSuffix = '',
+    spaceBefore,
+    spaceAfter,
+    ellipsis,
+    asArray,
+  }: MakeColumnsOptions<AsArray> = {}
+): TextLines<AsArray> => {
+  const rows = (!Array.isArray(contents[0]) ? [contents] : contents) as ColumnContent[][];
+  const columnCount = Math.max(0, ...rows.map(row => row.length));
+
+  const columns = buildColumns(
+    columnCount,
+    { align, gap, width: getColumnWidths(rows, width) },
+    { gap: (size: number) => ' '.repeat(size) }
+  );
+
+  // When `width` is a number, it is the total: the columns fit their content within what is left
+  // after the indent, the line prefix and suffix, and every gap.
+  if (typeof width === 'number') {
+    let available = width - (indent ?? 0);
+
+    if (linePrefix || lineSuffix) {
+      available -= stripStyles((linePrefix ?? '') + (lineSuffix ?? '')).length;
+    }
+
+    for (let index = 0; index < columnCount - 1; index++) {
+      available -= columns[index]?.gap?.length ?? 1;
+    }
+
+    const widths = getColumnWidths(rows, available);
+
+    for (let index = 0; index < columnCount; index++) {
+      columns[index] ??= {};
+      columns[index]!.width = widths[index];
+    }
+  }
+
+  const indentSpace = indent ? ' '.repeat(indent) : '';
+  const lines: string[] = spaceBefore ? makeBlank(spaceBefore, { asArray: true }) : [];
+
+  for (const rowContents of processContents(rows, columns, { ellipsis })) {
+    // Each cell fills its column's width, or shows as it is without one.
+    const line = rowContents.map((colContent, index) => {
+      const colWidth = columns[index]?.width;
+      const content =
+        colWidth === undefined ? (colContent ?? '') : alignLine(colContent ?? '', colWidth, columns[index]?.align, ' ');
+
+      return index < rowContents.length - 1 ? content + (columns[index]?.gap ?? ' ') : content;
+    });
+
+    lines.push(indentSpace + linePrefix + line.join('') + lineSuffix);
+  }
+
+  if (spaceAfter) lines.push(...makeBlank(spaceAfter, { asArray: true }));
 
   return (asArray ? lines : lines.join('\n')) as TextLines<AsArray>;
 };

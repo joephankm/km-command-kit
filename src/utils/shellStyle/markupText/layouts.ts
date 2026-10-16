@@ -7,27 +7,23 @@ import { alignLine, truncateText } from './stringUtils';
  * Supports:
  * - A target width and text alignment.
  * - Fill characters and truncation markers.
- * - Padding.
+ * - Left and right indents.
  *
  * @example `parse the input now`, `{ width: 12 }` => `parse the...`
  */
 export const displayLine = (
   text: string,
-  { width, align, ellipsis, fill, padding, paddingSize = 1 }: DisplayLineOptions = {}
+  { width, align, ellipsis, fill, indent, rightIndent }: DisplayLineOptions = {}
 ): string => {
-  if (!width) return text;
+  const indentSpace = indent ? ' '.repeat(indent) : '';
 
-  const contentWidth = padding ? width - paddingSize * (padding === true ? 2 : 1) : width;
+  if (!width) return indentSpace + text;
+
+  const contentWidth = width - (indent ?? 0) - (rightIndent ?? 0);
   let line = truncateText(text, contentWidth, { ellipsis });
 
-  if (align || fill) line = alignLine(line, contentWidth, align, fill);
+  // A filled line keeps its right indent as spaces, so it spans the full width.
+  if (align || fill) line = alignLine(line, contentWidth, align, fill) + ' '.repeat(rightIndent ?? 0);
 
-  if (padding) {
-    const space = ' '.repeat(paddingSize);
-
-    if (padding === 'left' || padding === true) line = space + line;
-    if (padding === 'right' || padding === true) line += space;
-  }
-
-  return line;
+  return indentSpace + line;
 };

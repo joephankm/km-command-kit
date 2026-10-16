@@ -1,6 +1,6 @@
 import type { NumberStyleName } from '../../shellStyle/common/numberStyles';
 import type { ValueOrParams } from '../../shellStyle/types/commonTypes';
-import type { MarkupOptions, ShellTextStyle } from '../../shellStyle/types/markupTypes';
+import type { MakeColumnsOptions, MarkupOptions, ShellTextStyle } from '../../shellStyle/types/markupTypes';
 import type { BulletListType, NumberedListType } from '../configs/docLogConfig';
 
 /**
@@ -54,7 +54,7 @@ export type DocLogStyle = ShellTextStyle | (string & {});
 /**
  * Configuration options for a document log and its methods.
  */
-export type DocLogOptions = Pick<MarkupOptions, 'width' | 'padding' | 'paddingSize' | 'align'> & {
+export type DocLogOptions = Pick<MarkupOptions, 'width' | 'indent' | 'rightIndent' | 'align'> & {
   /**
    * Named styles available to document log methods.
    */
@@ -145,8 +145,8 @@ export type DocLogOptions = Pick<MarkupOptions, 'width' | 'padding' | 'paddingSi
 export type DocLogSettings = Pick<
   DocLogOptions,
   | 'width'
-  | 'padding'
-  | 'paddingSize'
+  | 'indent'
+  | 'rightIndent'
   | 'styles'
   | 'titles'
   | 'justifyContent'
@@ -216,3 +216,9 @@ export type TopListItem =
  * Per-list formatting options.
  */
 export type ListOptions = Pick<DocLogOptions, 'numbered' | 'align' | 'spaceBefore' | 'spaceAfter'>;
+
+/**
+ * Per-call column layout and formatting options.
+ */
+export type ColumnsOptions = Pick<MakeColumnsOptions, 'width' | 'align' | 'gap' | 'ellipsis'> &
+  Pick<DocLogOptions, 'style' | 'spaceBefore' | 'spaceAfter'>;

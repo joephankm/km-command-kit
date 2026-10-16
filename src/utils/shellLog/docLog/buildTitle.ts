@@ -19,12 +19,12 @@ const titleOptions = makeToParams<TitleOptions, 'variant'>('variant');
  * Create the title-printing method for a document log.
  */
 export default (
-  { width, padding, paddingSize, titles }: DocLogSettings,
+  { width, indent, rightIndent, titles }: DocLogSettings,
   { defaultAlign, startLines, endPrintLines }: DocLogFuncs,
   divider: (options?: DividerOptions) => void
 ) => {
-  // Shared width and padding for title blocks.
-  const blockOptions = { width, padding, paddingSize };
+  // Shared width and indents for title blocks.
+  const blockOptions = { width, indent, rightIndent };
 
   // Track numbering independently for each title variant.
   const titleCounts: Partial<Record<TitleVariantName, number>> = {};

@@ -1,4 +1,5 @@
 import type { BoxAlign } from './boxTypes';
+import type { ValueOrIndexed } from './commonTypes';
 import type { ShellStyleFunc, ShellStyleName, ShellStyleStartCodeName } from './styleTypes';
 import type { NumberStyleName } from '../common/numberStyles';
 
@@ -11,11 +12,6 @@ export type ShellTextStyle = ShellStyleName | readonly ShellStyleStartCodeName[]
  * Text alignment modes for markup formatting.
  */
 export type TextAlign = BoxAlign | 'justify';
-
-/**
- * Side or sides where text padding appears.
- */
-export type PaddingSide = 'left' | 'right' | true;
 
 /**
  * Shared formatting settings for markup text.
@@ -48,15 +44,9 @@ export type MarkupOptions = {
    */
   indent?: number;
   /**
-   * Side or sides where padding appears around content.
+   * Indentation from the content's right. Read only when `width` is set.
    */
-  padding?: PaddingSide;
-  /**
-   * Number of padding characters.
-   *
-   * @default 1
-   */
-  paddingSize?: number;
+  rightIndent?: number;
   /**
    * Text placed before each line.
    */
@@ -123,7 +113,7 @@ export type TextLines<AsArray extends boolean> = AsArray extends true ? string[]
  */
 export type DisplayLineOptions = Pick<
   MarkupOptions,
-  'width' | 'align' | 'ellipsis' | 'fill' | 'padding' | 'paddingSize'
+  'width' | 'align' | 'ellipsis' | 'fill' | 'indent' | 'rightIndent'
 >;
 
 /**
@@ -139,8 +129,7 @@ export type MakeListOptions<AsArray extends boolean = false> = Pick<
   | 'numberType'
   | 'numberWidth'
   | 'align'
-  | 'padding'
-  | 'paddingSize'
+  | 'rightIndent'
   | 'spaceBefore'
   | 'spaceAfter'
 > & {
@@ -158,8 +147,7 @@ export type MakeBlockOptions<AsArray extends boolean = false> = Pick<
   | 'width'
   | 'align'
   | 'indent'
-  | 'padding'
-  | 'paddingSize'
+  | 'rightIndent'
   | 'linePrefix'
   | 'firstLinePrefix'
   | 'lineSuffix'
@@ -167,6 +155,64 @@ export type MakeBlockOptions<AsArray extends boolean = false> = Pick<
   | 'spaceAfter'
   | 'spaceBetween'
 > & {
+  /**
+   * Whether to return formatted lines as an array.
+   */
+  asArray?: AsArray;
+};
+
+/**
+ * Alignment of content within a column.
+ */
+export type ColumnAlign = BoxAlign;
+
+/**
+ * Content of a cell in a column, `null` for an empty cell.
+ */
+export type ColumnContent = string | null;
+
+/**
+ * Width of a column: its exact width, or bounds its auto width is held within.
+ */
+export type ColumnWidth =
+  | number
+  | {
+      /** Narrowest the auto width may be. */
+      min?: number;
+      /** Widest the auto width may be. */
+      max?: number;
+    };
+
+/**
+ * Layout settings for content set in columns.
+ */
+export type MakeColumnsOptions<AsArray extends boolean = false> = Pick<
+  MarkupOptions,
+  'indent' | 'rightIndent' | 'linePrefix' | 'lineSuffix' | 'spaceBefore' | 'spaceAfter'
+> & {
+  /**
+   * Total width of a line, or the width of each column keyed by its position.
+   *
+   * A column without a width, except the last, takes the width of its widest content.
+   */
+  width?: number | Record<number, ColumnWidth>;
+  /**
+   * Alignment of every column, or of each column keyed by its position.
+   *
+   * @default 'left'
+   */
+  align?: ValueOrIndexed<ColumnAlign>;
+  /**
+   * Blank columns between every two columns, or after each column keyed by its position.
+   *
+   * @default 1
+   */
+  gap?: ValueOrIndexed<number>;
+  /**
+   * Mark a cell wider than its column ends with when cut, instead of wrapping it. `true` uses the
+   * default mark.
+   */
+  ellipsis?: string | true;
   /**
    * Whether to return formatted lines as an array.
    */

@@ -6,11 +6,11 @@ import type { DocLogFuncs } from './docLog';
  * Create the body-printing method for a document log.
  */
 export default (
-  { width, padding, paddingSize, spacing }: DocLogSettings,
+  { width, indent, rightIndent, spacing }: DocLogSettings,
   { styleFuncOf, defaultAlign, startLines, endPrintLines }: DocLogFuncs
 ) => {
-  // Shared width and padding for body text.
-  const blockOptions = { width, padding, paddingSize };
+  // Shared width and indents for body text.
+  const blockOptions = { width, indent, rightIndent };
 
   /**
    * Print formatted body text.
