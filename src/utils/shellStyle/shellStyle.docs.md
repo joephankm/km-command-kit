@@ -3,7 +3,7 @@ name: shellStyle
 description:
   Add ANSI text styles and draw terminal boxes and rules with semantic presets or custom SGR codes.
 labels: ['shell', 'ansi', 'terminal', 'style', 'box', 'markup']
-version: 1.5.0
+version: 1.6.0
 updated: 2026-10-06
 ---
 

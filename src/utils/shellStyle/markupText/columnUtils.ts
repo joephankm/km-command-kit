@@ -109,11 +109,12 @@ export const processContents = (
  * a total width, the last column takes the width that remains; without one, the last column has no
  * width.
  *
- * @example `[['-o', 'output'], ['--verbose', 'more detail']]`, `20` => `{ 0: 9, 1: 11 }`
+ * @example `[['-o', 'output'], ['--verbose', 'more detail']]`, `20` => `{ 0: 9, 1: 10 }`
  */
 export const getColumnWidths = (
   contents: ColumnContent[][],
-  width?: MakeColumnsOptions['width']
+  width?: MakeColumnsOptions['width'],
+  { gap = 1 }: Pick<MakeColumnsOptions, 'gap'> = {}
 ): Record<number, number> => {
   const columnCount = Math.max(0, ...contents.map(row => row.length));
   const widths: Record<number, number> = {};
@@ -136,7 +137,10 @@ export const getColumnWidths = (
       continue;
     }
 
-    if (index < columnCount - 1) usedWidth += widths[index]!;
+    // Every column but the last is followed by its gap.
+    if (index < columnCount - 1) {
+      usedWidth += widths[index]! + (typeof gap === 'number' ? gap : (gap[index] ?? 1));
+    }
   }
 
   // With a total width, the last column takes what remains unless it has an exact width.

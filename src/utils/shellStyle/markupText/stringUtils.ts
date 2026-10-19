@@ -69,14 +69,100 @@ export const alignLine = (line: string, width: number, align: TextAlign = 'left'
 };
 
 /**
- * Options for wrapping text: how each wrapped line is aligned within the width, the text set before
- * and after each line, and whether the lines come back as an array.
+ * Options for wrapping a line: the indents and the text set before and after it.
  */
-type WrapTextOptions<AsArray extends boolean> = Pick<MarkupOptions, 'align' | 'linePrefix' | 'lineSuffix'> & {
-  /** Text set before the first line in place of `linePrefix`, such as a list marker. */
-  firstLinePrefix?: string;
-  /** Returns the lines as an array instead of joined by line breaks. */
-  asArray?: AsArray;
+export type LineWrapperOptions<Value = unknown> = Pick<
+  MarkupOptions,
+  'width' | 'indent' | 'rightIndent' | 'linePrefix' | 'lineSuffix'
+> & {
+  /** Text set after the indent, right before the content. */
+  contentPrefix?: string;
+  /**
+   * Text set in place of `contentPrefix` on the first line, or a function that makes it from a
+   * value.
+   */
+  firstContentPrefix?: string | ((value: Value) => string);
+};
+
+/**
+ * Functions that set content within the indents, prefixes, and suffix of a line wrapper.
+ */
+type LineWrapper<Value = unknown> = {
+  /** Set a line, already fitted to the width, within the prefixes and suffix. */
+  line: (text: string) => string;
+  /**
+   * Set the first line, already fitted to the width, within the first-line prefixes and suffix. The
+   * value is passed to `firstContentPrefix` when it is a function.
+   */
+  firstLine: (text: string, value?: Value) => string;
+  /**
+   * Width of the prefixes and suffix set around a line, or around the first line. The value is
+   * passed to `firstContentPrefix` when it is a function.
+   */
+  width: (target?: 'line' | 'firstLine', value?: Value) => number;
+};
+
+/**
+ * Make the functions that set content within its indents, prefixes, and suffix.
+ *
+ * @example `{ linePrefix: '│', indent: 2, contentPrefix: '> ' }`, then `line('parse')` => `│  > parse`
+ */
+export const initLineWrapper = <Value = unknown>({
+  width,
+  indent,
+  rightIndent,
+  linePrefix,
+  contentPrefix,
+  firstContentPrefix,
+  lineSuffix,
+}: LineWrapperOptions<Value> = {}): LineWrapper<Value> => {
+  // The line prefix sits outermost, then the indent, then the content prefix.
+  const commonPrefix = (linePrefix ?? '') + (indent ? ' '.repeat(indent) : '');
+  const prefix = commonPrefix + (contentPrefix ?? '');
+  const firstPrefix =
+    typeof firstContentPrefix === 'function'
+      ? (value: Value) => commonPrefix + firstContentPrefix(value)
+      : firstContentPrefix !== undefined
+        ? commonPrefix + firstContentPrefix
+        : undefined;
+
+  // The suffix is set only when there is a width: the right indent, then the line suffix outermost.
+  const suffix = width ? (rightIndent ? ' '.repeat(rightIndent) : '') + (lineSuffix ?? '') : '';
+
+  const lineWidth = stripStyles(prefix + suffix).length;
+
+  const line: LineWrapper<Value>['line'] = prefix || suffix ? text => prefix + text + suffix : text => text;
+
+  // A first prefix made by a function is made again from the value on each call.
+  if (typeof firstPrefix === 'function') {
+    return {
+      line,
+      firstLine: (text, value) => firstPrefix(value as Value) + text + suffix,
+      width: (target = 'line', value) =>
+        target === 'firstLine' ? stripStyles(firstPrefix(value as Value) + suffix).length : lineWidth,
+    };
+  }
+
+  const firstLineWidth = typeof firstPrefix === 'string' ? stripStyles(firstPrefix + suffix).length : lineWidth;
+
+  return {
+    line,
+    firstLine: firstPrefix ? text => firstPrefix + text + suffix : line,
+    width: (target = 'line') => (target === 'firstLine' ? firstLineWidth : lineWidth),
+  };
+};
+
+/**
+ * Options for wrapping text: how each wrapped line is aligned within the width, the line wrapper
+ * that sets each line within its prefixes and suffix, and whether the lines come back as an array.
+ */
+type WrapTextOptions<AsArray extends boolean, Value = unknown> = Pick<MarkupOptions<AsArray>, 'align' | 'asArray'> & {
+  /** Line wrapper that sets each line, the first line with its own prefix. */
+  lineWrapper?: LineWrapper<Value>;
+  /** Value passed to the line wrapper's first line, to make its prefix. */
+  firstLineValue?: Value;
+  /** Width the first line's content wraps within, in place of what its prefix leaves. */
+  firstLineWidth?: number;
 };
 
 /**
@@ -91,18 +177,28 @@ type WrapTextOptions<AsArray extends boolean> = Pick<MarkupOptions, 'align' | 'l
  * @example `parse the input now`, width `10` => `parse the\ninput now`, or with `asArray`,
  * `['parse the', 'input now']`
  */
-export const wrapText = <AsArray extends boolean = false>(
+export const wrapText = <AsArray extends boolean = false, Value = unknown>(
   paragraph: string,
   width: number,
-  { align, linePrefix = '', firstLinePrefix, lineSuffix = '', asArray }: WrapTextOptions<AsArray> = {}
+  { align, lineWrapper, firstLineValue, firstLineWidth, asArray }: WrapTextOptions<AsArray, Value> = {}
 ): TextLines<AsArray> => {
-  const contentWidth = linePrefix || lineSuffix ? width - stripStyles(linePrefix + lineSuffix).length : width;
+  const contentWidth = lineWrapper ? width - lineWrapper.width('line') : width;
   const lines: string[] = [];
 
-  // The first line wraps within what its own prefix leaves, then every later line within what
-  // `linePrefix` leaves.
-  let lineWidth =
-    firstLinePrefix === undefined ? contentWidth : width - stripStyles(firstLinePrefix + lineSuffix).length;
+  // The first line wraps within `firstLineWidth`, or what its own prefix leaves, then every later
+  // line within what the line prefix leaves.
+  let lineWidth = firstLineWidth ?? (lineWrapper ? width - lineWrapper.width('firstLine') : width);
+
+  const pushLine = (line: string) => {
+    const alignedLine = align ? alignLine(line, lineWidth, align) : line;
+    if (lineWrapper) {
+      lines.push(
+        lines.length === 0 ? lineWrapper.firstLine(alignedLine, firstLineValue) : lineWrapper.line(alignedLine)
+      );
+    } else {
+      lines.push(alignedLine);
+    }
+  };
 
   let line = '';
   let lineLength = 0;
@@ -124,22 +220,16 @@ export const wrapText = <AsArray extends boolean = false>(
     }
     // In a line break
     else {
-      lines.push(align ? alignLine(line, lineWidth, align) : line);
+      pushLine(line);
       line = word;
       lineLength = wordLength;
       if (lineWidth !== contentWidth) lineWidth = contentWidth;
     }
   }
 
-  // A line is aligned when the next word pushes it out, and the last line once every word is
-  // placed, so no line needs a second pass.
-  lines.push(align ? alignLine(line, lineWidth, align) : line);
-
-  if (firstLinePrefix !== undefined || linePrefix || lineSuffix) {
-    for (let index = 0; index < lines.length; index++) {
-      lines[index] = (firstLinePrefix && index === 0 ? firstLinePrefix : linePrefix) + lines[index] + lineSuffix;
-    }
-  }
+  // A line is aligned and wrapped when the next word pushes it out, and the last line once every
+  // word is placed
+  pushLine(line);
 
   return (asArray ? lines : lines.join('\n')) as TextLines<AsArray>;
 };

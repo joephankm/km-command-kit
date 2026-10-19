@@ -16,7 +16,7 @@ export type TextAlign = BoxAlign | 'justify';
 /**
  * Shared formatting settings for markup text.
  */
-export type MarkupOptions = {
+export type MarkupOptions<AsArray extends boolean = false> = {
   /**
    * Target width for formatted content.
    */
@@ -51,12 +51,6 @@ export type MarkupOptions = {
    * Text placed before each line.
    */
   linePrefix?: string;
-  /**
-   * Prefix used on each paragraph's first line instead of `linePrefix`.
-   *
-   * Accepts a fixed string or a function that returns a prefix for the paragraph index.
-   */
-  firstLinePrefix?: string | ((index: number) => string);
   /**
    * Text placed after each line.
    */
@@ -101,6 +95,10 @@ export type MarkupOptions = {
    * Blank lines between the paragraphs of formatted content.
    */
   spaceBetween?: number;
+  /**
+   * Whether to return formatted lines as an array.
+   */
+  asArray?: AsArray;
 };
 
 /**
@@ -120,7 +118,7 @@ export type DisplayLineOptions = Pick<
  * Content and layout settings for formatted list items.
  */
 export type MakeListOptions<AsArray extends boolean = false> = Pick<
-  MarkupOptions,
+  MarkupOptions<AsArray>,
   | 'width'
   | 'indent'
   | 'marker'
@@ -132,34 +130,25 @@ export type MakeListOptions<AsArray extends boolean = false> = Pick<
   | 'rightIndent'
   | 'spaceBefore'
   | 'spaceAfter'
-> & {
-  /**
-   * Whether to return formatted lines as an array.
-   */
-  asArray?: AsArray;
-};
+  | 'asArray'
+>;
 
 /**
  * Paragraph layout and spacing settings for text blocks.
  */
 export type MakeBlockOptions<AsArray extends boolean = false> = Pick<
-  MarkupOptions,
+  MarkupOptions<AsArray>,
   | 'width'
   | 'align'
   | 'indent'
   | 'rightIndent'
   | 'linePrefix'
-  | 'firstLinePrefix'
   | 'lineSuffix'
   | 'spaceBefore'
   | 'spaceAfter'
   | 'spaceBetween'
-> & {
-  /**
-   * Whether to return formatted lines as an array.
-   */
-  asArray?: AsArray;
-};
+  | 'asArray'
+>;
 
 /**
  * Alignment of content within a column.
@@ -187,8 +176,8 @@ export type ColumnWidth =
  * Layout settings for content set in columns.
  */
 export type MakeColumnsOptions<AsArray extends boolean = false> = Pick<
-  MarkupOptions,
-  'indent' | 'rightIndent' | 'linePrefix' | 'lineSuffix' | 'spaceBefore' | 'spaceAfter'
+  MarkupOptions<AsArray>,
+  'indent' | 'rightIndent' | 'linePrefix' | 'lineSuffix' | 'spaceBefore' | 'spaceAfter' | 'asArray'
 > & {
   /**
    * Total width of a line, or the width of each column keyed by its position.
@@ -213,10 +202,79 @@ export type MakeColumnsOptions<AsArray extends boolean = false> = Pick<
    * default mark.
    */
   ellipsis?: string | true;
+};
+
+/**
+ * An item of a definition list: a label and its content, one paragraph or several.
+ */
+export type DefinitionItem = {
+  /** Text the item is known by. */
+  label: string;
+  /** Text shown with the label, one paragraph or several. */
+  content: string | string[];
+};
+
+/**
+ * Arrangement of a definition list's labels and their content.
+ */
+export type DefinitionLayout = 'aligned' | 'stacked' | 'inline';
+
+/**
+ * Mark shown at the start of a definition list entry: the same mark every time, or a number in a
+ * number style followed by a mark.
+ */
+export type DefinitionMarker = string | [numberType: NumberStyleName, marker: string];
+
+/**
+ * Layout settings for a definition list.
+ */
+export type MakeDefinitionsOptions<AsArray extends boolean = false> = Pick<
+  MarkupOptions<AsArray>,
+  'width' | 'align' | 'indent' | 'rightIndent' | 'linePrefix' | 'lineSuffix' | 'spaceBefore' | 'spaceAfter' | 'asArray'
+> & {
   /**
-   * Whether to return formatted lines as an array.
+   * Arrangement of each label and its content.
+   *
+   * @default 'aligned'
    */
-  asArray?: AsArray;
+  layout?: DefinitionLayout;
+  /**
+   * Mark shown at the start of each item, before its label.
+   */
+  marker?: DefinitionMarker;
+  /**
+   * Options of the `'aligned'` layout.
+   */
+  alignedOptions?: {
+    /** Alignment of each label within its column. Default is `'left'`. */
+    labelAlign?: ColumnAlign;
+    /** Width of the label column, exact or held within bounds. */
+    labelWidth?: ColumnWidth;
+    /** Text set between the label column and the content. */
+    separator?: string;
+  };
+  /**
+   * Options of the `'stacked'` layout.
+   */
+  stackedOptions?: {
+    /** Columns the content is pushed right past its label. */
+    contentIndent?: number;
+    /** Blank lines between two items. Default is `1`. */
+    itemSpacing?: number;
+    /** Blank lines between the paragraphs of an item's content. */
+    contentSpacing?: number;
+    /** Text set right after each label. */
+    labelSuffix?: string;
+    /** Mark shown at the start of each paragraph of the content. */
+    contentMarker?: DefinitionMarker;
+  };
+  /**
+   * Options of the `'inline'` layout.
+   */
+  inlineOptions?: {
+    /** Text set between each label and its content. Default is `'—'`. */
+    separator?: string;
+  };
 };
 
 /**
