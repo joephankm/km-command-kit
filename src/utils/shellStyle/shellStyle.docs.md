@@ -3,8 +3,8 @@ name: shellStyle
 description:
   Add ANSI text styles and draw terminal boxes and rules with semantic presets or custom SGR codes.
 labels: ['shell', 'ansi', 'terminal', 'style', 'box', 'markup']
-version: 1.6.0
-updated: 2026-10-06
+version: 1.6.1
+updated: 2026-10-20
 ---
 
 # Shell Style
@@ -19,7 +19,8 @@ It holds three components:
 
 - **Styling** (`styleText/`) — wrapping text in a style, either a semantic preset or a code composed by hand.
 - **Drawing** (`drawBox/`) — boxes, tables and rules built from Unicode box-drawing glyphs.
-- **Markup** (`markupText/`) — text recased, styled, set within a width, and laid out as blocks and lists.
+- **Markup** (`markupText/`) — text recased, styled, set within a width, and laid out as blocks, lists, columns and
+  definition lists.
 
 ---
 
@@ -30,7 +31,7 @@ It holds three components:
 | `style`     | `styleText`  | `styleText/simpleStyle.ts` | Named functions that wrap text in configured ANSI styles              |
 | `styleCode` | `styleText`  | `styleText/styleCode.ts`   | Converts style names into a semicolon-separated SGR parameter string  |
 | `draw`      | `drawBox`    | `drawBox/drawBox.ts`       | Provides `buildBox` and `line` drawing methods                        |
-| `markup`    | `markupText` | `markupText/markupText.ts` | Formats text as cased and styled text, single lines, blocks and lists |
+| `markup`    | `markupText` | `markupText/markupText.ts` | Formats text as cased and styled text, single lines, blocks, lists, columns and definition lists |
 
 ---
 
@@ -271,8 +272,8 @@ and its name to `BoxStyleName`.
 ## Markup
 
 `markup` formats terminal text without printing it. Use `formatText` to change a string's case or style, `displayLine`
-to fit one line, and the `make*` methods to build lines, paragraphs, or lists. Results are strings; `makeBlank`,
-`makeBlock`, and `makeList` can return arrays of lines with `asArray: true`.
+to fit one line, and the `make*` methods to build lines, paragraphs, lists, columns, or definition lists. Results are
+strings; every `make*` method can return an array of lines with `asArray: true`.
 
 ```ts
 import { markup } from '@/utils/shellStyle';
@@ -289,9 +290,9 @@ console.log(markup.makeList(['parse the input given on the command line', 'valid
 
 Method names describe the shape of the result:
 
-| Prefix    | Produces                                    | Methods                              |
-| --------- | ------------------------------------------- | ------------------------------------ |
-| `make`    | A structure: lines arranged as a whole      | `makeBlock`, `makeList`, `makeBlank` |
+| Prefix    | Produces                                    | Methods                                                                |
+| --------- | ------------------------------------------- | ---------------------------------------------------------------------- |
+| `make`    | A structure: lines arranged as a whole      | `makeBlock`, `makeList`, `makeColumns`, `makeDefinitions`, `makeBlank` |
 | `display` | A layout: content placed within a width     | `displayLine`                        |
 | `format`  | A string process: one text changed in place | `formatText`                         |
 
@@ -391,28 +392,139 @@ lines after the entire list.
 Alpha numbering continues past `Z` like spreadsheet columns (`AA`, `AB`). Circled numbering supports values through
 `㊿`, then falls back to ordinary digits.
 
+### `markup.makeColumns(contents, options?)`
+
+Sets content in columns without borders, each column aligned on its own. A `string[]` is one row, returned as one line; a
+`string[][]` is a block, one inner array per row. A `null` cell is an empty one, such as an option without a short flag.
+
+```ts
+const rows = [
+  ['-o', '--output', 'Write the result to the given file path'],
+  [null, '--verbose', 'Show more detail'],
+];
+
+console.log(markup.makeColumns(rows, { width: 40 }));
+```
+
+```
+-o --output  Write the result to the
+             given file path
+   --verbose Show more detail
+```
+
+`width` sets the columns' widths in one of two ways:
+
+- **A number** is the total width of a line. Every column but the last is as wide as its widest content, and the last
+  takes what remains after them and their gaps.
+- **A record keyed by column position** sets each column on its own: a number for an exact width, or `{ min, max }` to
+  hold its auto width within. A column without one, except the last, is as wide as its widest content. With no total
+  width, the last column has no width and shows its content as it is.
+
+```ts
+markup.makeColumns(['name', '4 KB'], { width: { 0: 10, 1: 6 }, align: { 1: 'right' } }); // 'name         4 KB'
+```
+
+A cell wider than its column wraps within it, and its row grows to as many lines as its tallest cell. With `ellipsis`,
+the cell is cut to one line instead, ending in that mark — `true` for the default `...`:
+
+```ts
+console.log(markup.makeColumns(rows, { width: 36, ellipsis: '…' }));
+```
+
+```
+-o --output  Write the result to th…
+   --verbose Show more detail
+```
+
+`align` and `gap` take one value for every column, or a record keyed by column position. Each gap is the number of
+blank columns after its column, `1` by default. `indent`, `linePrefix`, `rightIndent` and `lineSuffix` sit around every
+line, the last two only when `width` is a number.
+
+### `markup.makeDefinitions(items, options?)`
+
+Formats a definition list from `{ label, content }` items, where `content` is one paragraph or an array of them.
+`layout` picks how each label sits with its content:
+
+| Layout      | Arrangement                                                                  |
+| ----------- | ---------------------------------------------------------------------------- |
+| `'stacked'` | The default. The label on its own line, with its content below it            |
+| `'aligned'` | The label in a column as wide as the widest label, with its content beside it |
+| `'inline'`  | The label and its content on one line, joined by a separator                 |
+
+```ts
+const items = [
+  { label: 'output', content: 'Write the result to the given file path' },
+  { label: 'verbose', content: ['Show more detail.', 'Repeat it for more.'] },
+];
+
+markup.makeDefinitions(items, { width: 30, marker: '•', stackedOptions: { contentIndent: 2 } });
+markup.makeDefinitions(items, { layout: 'aligned', alignedOptions: { separator: ' : ' } });
+markup.makeDefinitions(items, { width: 30, layout: 'inline' });
+```
+
+```
+• output
+    Write the result to the
+    given file path
+
+• verbose
+    Show more detail.
+    Repeat it for more.
+```
+
+```
+output  : Write the result to the given file path
+verbose : Show more detail.
+        : Repeat it for more.
+```
+
+```
+output — Write the result to
+the given file path
+verbose — Show more detail.
+Repeat it for more.
+```
+
+`marker` leads each item: a mark such as `'•'`, or a `[numberType, marker]` pair such as `['upperRoman', '.']` to number
+the items. The lines after an item's first one are indented past it. Each layout takes its own options in an option named
+after it:
+
+| Option           | Fields                                                                       | Description                                                                                                                                                                                                                                                         |
+| ---------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `stackedOptions` | `contentIndent`, `itemSpacing`, `contentSpacing`, `labelSuffix`, `contentMarker` | `contentIndent` pushes the content right past its label. `itemSpacing` is the blank lines between items, `1` by default, and `contentSpacing` those between an item's paragraphs. `labelSuffix` is set right after each label. `contentMarker` leads each paragraph, typed like `marker` |
+| `alignedOptions` | `labelAlign`, `labelWidth`, `separator`                                      | `labelAlign` places each label within its column, `'left'` by default. `labelWidth` is the column's width, exact or `{ min, max }`. `separator` is set between the label column and the content on every line; without it, one space                                  |
+| `inlineOptions`  | `separator`                                                                  | The text between each label and its content, with a space on each side. Defaults to `'—'`                                                                                                                                                                            |
+
+An `'inline'` item with several paragraphs joins them into one, with a space between.
+
+**The `'aligned'` layout does not yet apply** `marker`, `width`, `indent`, `rightIndent`, `linePrefix` or `lineSuffix`:
+its content shows as it is, without wrapping. A label wider than `labelWidth` wraps within its column, but a single word
+cannot wrap and pushes its content out of line.
+
 ### Options
 
 | Option            | Type                                           | Used by                                | Description                                                                          |
 | ----------------- | ---------------------------------------------- | -------------------------------------- |--------------------------------------------------------------------------------------|
-| `width`           | number                                         | `displayLine`, `makeBlock`, `makeList` | Visible columns available for content; enables truncation or wrapping as applicable  |
-| `align`           | `'left'`, `'center'`, `'right'` or `'justify'` | `displayLine`, `makeBlock`, `makeList` | Content alignment; defaults to `'left'`                                              |
-| `ellipsis`        | string                                         | `displayLine`                          | Ending used when text is truncated; defaults to `'...'`                              |
+| `width`           | number, or a record of `ColumnWidth` in `makeColumns` | `displayLine`, `makeBlock`, `makeList`, `makeColumns`, `makeDefinitions` | Visible columns available for content; enables truncation or wrapping as applicable  |
+| `align`           | `'left'`, `'center'`, `'right'` or `'justify'` | `displayLine`, `makeBlock`, `makeList`, `makeColumns`, `makeDefinitions` | Content alignment; defaults to `'left'`. In `makeColumns`, one for every column or a record by position, without `'justify'` |
+| `ellipsis`        | string, or `true` in `makeColumns`             | `displayLine`, `makeColumns`           | Ending used when text is truncated; defaults to `'...'`. In `makeColumns`, setting it cuts a wide cell instead of wrapping it |
+| `gap`             | number or a record by column position          | `makeColumns`                          | Blank columns after each column but the last; defaults to `1`                        |
 | `fill`            | string                                         | `displayLine`                          | Character used to fill space created by alignment; defaults to a space               |
 | `padding`         | `'left'`, `'right'` or `true`                  | `displayLine`, `makeBlock`, `makeList` | Adds spaces outside the content on the selected side(s); `true` means both           |
 | `paddingSize`     | number                                         | `displayLine`, `makeBlock`, `makeList` | Number of padding spaces; defaults to `1`                                            |
-| `linePrefix`      | string                                         | `makeBlock`                            | Text before each wrapped line, within the width                                      |
+| `linePrefix`      | string                                         | `makeBlock`, `makeColumns`, `makeDefinitions` | Text before each wrapped line, within the width                                      |
 | `firstLinePrefix` | string or `(index) => string`                  | `makeBlock`                            | First-line prefix per paragraph, replacing `linePrefix`; function receives its index |
-| `lineSuffix`      | string                                         | `makeBlock`                            | Text after each wrapped line, within the width                                       |
-| `indent`          | number                                         | `makeList`                             | Leading spaces before each item                                                      |
-| `marker`          | string                                         | `makeList`                             | Bullet or text after the number; defaults to `'•'` or `'.'` when numbered            |
+| `lineSuffix`      | string                                         | `makeBlock`, `makeColumns`, `makeDefinitions` | Text after each wrapped line, within the width                                       |
+| `indent`          | number                                         | `makeList`, `makeColumns`, `makeDefinitions` | Leading spaces before each item or line                                              |
+| `marker`          | string, or `[numberType, marker]` in `makeDefinitions` | `makeList`, `makeDefinitions`  | Bullet or text after the number; defaults to `'•'` or `'.'` when numbered in `makeList`, and to none in `makeDefinitions` |
+| `layout`          | `'stacked'`, `'aligned'` or `'inline'`         | `makeDefinitions`                      | How each label sits with its content; defaults to `'stacked'`                        |
 | `numbered`        | boolean                                        | `makeList`                             | Outputs numbered items instead of bullets                                            |
 | `startNumber`     | number                                         | `makeList`                             | Number assigned to the first item; defaults to `1`                                   |
 | `numberType`      | number type name                               | `makeList`                             | Number format; defaults to decimal                                                   |
 | `numberWidth`     | number                                         | `makeList`                             | Reserved width for right-aligned numbers; defaults to the widest number              |
-| `spaceBefore`     | number                                         | `makeBlock`, `makeList`                | Blank lines before the first paragraph or item                                       |
-| `spaceAfter`      | number                                         | `makeBlock`, `makeList`                | Blank lines after each block paragraph (default `1`) or once after a list            |
-| `asArray`         | boolean                                        | `makeBlank`, `makeBlock`, `makeList`   | Returns lines as an array instead of joining them with line breaks                   |
+| `spaceBefore`     | number                                         | `makeBlock`, `makeList`, `makeColumns`, `makeDefinitions` | Blank lines before the first paragraph, item or row                                  |
+| `spaceAfter`      | number                                         | `makeBlock`, `makeList`, `makeColumns`, `makeDefinitions` | Blank lines after each block paragraph (default `1`) or once after the whole result  |
+| `asArray`         | boolean                                        | `makeBlank`, `makeBlock`, `makeList`, `makeColumns`, `makeDefinitions` | Returns lines as an array instead of joining them with line breaks                   |
 | `style`           | preset name or array of code names             | `formatText`                           | Style wrapped around the text                                                        |
 | `textCase`        | text case name                                 | `formatText`                           | Case conversion applied before styling                                               |
 
@@ -424,7 +536,7 @@ want list markers, wrapping, or alignment.
 
 ## Folder structure
 
-- `index.ts` — public entry point for the `style`, `styleCode`, and `draw` exports.
+- `index.ts` — public entry point for the `style`, `styleCode`, `draw`, and `markup` exports.
 - `configs/styleConfig.ts` — maps each named preset to its opening and closing SGR codes.
 - `configs/drawBoxConfig.ts` — holds the box styles and the drawing defaults.
 - `constants/shellStyleCodes.ts` — defines the SGR codes for foreground colors, backgrounds, decorations, and resets.
@@ -432,21 +544,13 @@ want list markers, wrapping, or alignment.
 - `types/styleTypes.ts` — defines the shared `ShellStyleFunc` and `ShellStyleCodes` types.
 - `types/boxTypes.ts` — defines the charset, option and param types the drawing tool shares.
 - `types/commonTypes.ts` — defines util types owned by no one tool, such as the two shapes an argument accepts.
-- `styleText/simpleStyle.ts` — creates the named text-wrapping functions from `styleConfig`.
-- `styleText/styleCode.ts` — builds the style-name lookup and exposes `styleCode`.
-- `drawBox/drawBox.ts` — the drawing entry point, exposing `buildBox` and drawing `line` itself.
-- `drawBox/buildBox.ts` — builds one drawing's border and row methods from its column widths.
-- `drawBox/formatters.ts` — sits content within a width, padded and filled.
-- `drawBox/paramFunctions.ts` — reads an argument given either as a value or as a full params object.
-- `markupText/markupText.ts` — the markup entry point, gathering every method under one default export.
-- `markupText/formatters.ts` — string processes: `formatText`.
-- `markupText/layouts.ts` — content placed within a width: `displayLine`.
-- `markupText/structures.ts` — lines arranged as a whole: `makeBlank`, `makeBlock`, `makeList`.
-- `markupText/stringUtils.ts` — strips styles, and aligns, wraps and truncates text by its visible width.
-- `common/textCases.ts` — title, sentence and first-letter cases; independent, so it can be copied out on its own.
-- `common/numberStyles.ts` — numbers written as Roman numerals, letters or circled digits; independent, like `textCases.ts`.
-- `constants/patterns.ts` — the style-escape patterns for stripping and splitting styled text.
 - `types/markupTypes.ts` — the option and line types the markup methods share.
+- `styleText/` — the Styling component: the named presets and the style-code composer.
+- `drawBox/` — the Drawing component: boxes, their rows and borders, and standalone rules.
+- `markupText/` — the Markup component: `markupText.ts` gathers every method, and the other files hold them by kind,
+  with each larger structure, such as `makeColumns` or `makeDefinitions`, in a file of its own.
+- `common/` — general-purpose helpers not tied to this util, such as text cases, number styles, and text wrapping by
+  visible width.
 
 ---
 

@@ -36,7 +36,7 @@ type LineCollectorOptions<AsArray extends boolean> = Pick<
  */
 type LineCollector<AsArray extends boolean> = {
   /** Add a line, or several, after the ones collected so far. */
-  push: (lines: string | string[]) => void;
+  push: (lines: string | string[], noWrap?: boolean) => void;
   /** Return the collected lines, with the blank lines after them, as a string or an array. */
   result: () => TextLines<AsArray>;
 };
@@ -46,15 +46,20 @@ type LineCollector<AsArray extends boolean> = {
  *
  * @example `{ spaceBefore: 1 }`, then `push('parse')` and `result()` => `\nparse`
  */
-export const initLineCollector = <AsArray extends boolean = false>({
-  spaceBefore,
-  spaceAfter,
-  asArray,
-}: LineCollectorOptions<AsArray> = {}): LineCollector<AsArray> => {
+export const initLineCollector = <AsArray extends boolean = false>(
+  { spaceBefore, spaceAfter, asArray }: LineCollectorOptions<AsArray>,
+  wrapFunc?: (line: string) => string
+): LineCollector<AsArray> => {
   const lines: string[] = spaceBefore ? makeBlank(spaceBefore, { asArray: true }) : [];
 
   return {
-    push: newLines => (typeof newLines === 'string' ? lines.push(newLines) : lines.push(...newLines)),
+    push: (newLines, noWrap) => {
+      if (Array.isArray(newLines)) {
+        lines.push(...(wrapFunc && !noWrap ? newLines.map(wrapFunc) : newLines));
+      } else {
+        lines.push(wrapFunc && !noWrap ? wrapFunc(newLines) : newLines);
+      }
+    },
     result: () => {
       if (spaceAfter) lines.push(...makeBlank(spaceAfter, { asArray: true }));
 

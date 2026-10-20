@@ -1,6 +1,11 @@
 import type { NumberStyleName } from '../../shellStyle/common/numberStyles';
 import type { ValueOrParams } from '../../shellStyle/types/commonTypes';
-import type { MakeColumnsOptions, MarkupOptions, ShellTextStyle } from '../../shellStyle/types/markupTypes';
+import type {
+  MakeColumnsOptions,
+  MakeDefinitionsOptions,
+  MarkupOptions,
+  ShellTextStyle,
+} from '../../shellStyle/types/markupTypes';
 import type { BulletListType, NumberedListType } from '../configs/docLogConfig';
 
 /**
@@ -221,4 +226,13 @@ export type ListOptions = Pick<DocLogOptions, 'numbered' | 'align' | 'spaceBefor
  * Per-call column layout and formatting options.
  */
 export type ColumnsOptions = Pick<MakeColumnsOptions, 'width' | 'align' | 'gap' | 'ellipsis'> &
+  Pick<DocLogOptions, 'style' | 'spaceBefore' | 'spaceAfter'>;
+
+/**
+ * Per-call definition list layout and formatting options.
+ */
+export type DefinitionsOptions = Pick<
+  MakeDefinitionsOptions,
+  'layout' | 'marker' | 'align' | 'alignedOptions' | 'stackedOptions' | 'inlineOptions'
+> &
   Pick<DocLogOptions, 'style' | 'spaceBefore' | 'spaceAfter'>;

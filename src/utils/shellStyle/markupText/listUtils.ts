@@ -1,6 +1,6 @@
 import { NUMBER_STYLES } from '../common/numberStyles';
 import type { MakeListOptions } from '../types/markupTypes';
-import { stripStyles } from './stringUtils';
+import { stripStyles } from '../common/styleExcapeUtils';
 
 /**
  * Options for list prefixes: the marker, and how the items are numbered.
@@ -25,7 +25,7 @@ type ListPrefixes = {
  * @example `3`, `{ numbered: true }` => `{ firstContentPrefix: index => '1. ', contentPrefix: '   ' }`
  */
 export const getListPrefixes = (
-  count: number,
+  itemCount: number,
   { numbered, startNumber = 1, numberType, numberWidth, marker = numbered ? '.' : '•' }: ListPrefixOptions = {}
 ): ListPrefixes => {
   const markerLength = stripStyles(marker).length;
@@ -40,7 +40,7 @@ export const getListPrefixes = (
     const numbers: string[] = [];
     numberWidth ??= 0;
 
-    for (let index = 0; index < count; index++) {
+    for (let index = 0; index < itemCount; index++) {
       const number = numberStyle(startNumber + index);
       numbers.push(number);
 
@@ -54,7 +54,7 @@ export const getListPrefixes = (
   }
 
   // Numbers are right-aligned to the widest, so every item's text starts in the same column.
-  numberWidth ??= String(startNumber + count - 1).length;
+  numberWidth ??= String(startNumber + itemCount - 1).length;
 
   return {
     firstContentPrefix: index => String(startNumber + index).padStart(numberWidth) + marker + ' ',

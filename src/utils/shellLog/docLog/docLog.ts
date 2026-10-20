@@ -5,6 +5,7 @@ import type { ShellStyleFunc } from '../../shellStyle/types/styleTypes';
 import config from '../configs/docLogConfig';
 import buildBody from './buildBody';
 import buildColumns from './buildColumns';
+import buildDefinitions from './buildDefinitions';
 import buildDivider from './buildDivider';
 import buildList from './buildList';
 import buildTitle from './buildTitle';
@@ -128,6 +129,11 @@ const docLog = (options: Partial<DocLogSettings> = {}) => {
      * Print a formatted list.
      */
     list: buildList(settings, docFunctions),
+
+    /**
+     * Print a definition list, every label shown with its content.
+     */
+    definitions: buildDefinitions(settings, docFunctions),
 
     /**
      * Print rows of content in columns.

@@ -1,5 +1,5 @@
 import type { DisplayLineOptions } from '../types/markupTypes';
-import { alignLine, truncateText } from './stringUtils';
+import { alignText, truncateText } from '../common/textUtils';
 
 /**
  * Formats one line for display.
@@ -20,10 +20,10 @@ export const displayLine = (
   if (!width) return indentSpace + text;
 
   const contentWidth = width - (indent ?? 0) - (rightIndent ?? 0);
-  let line = truncateText(text, contentWidth, { ellipsis });
+  let line = truncateText(text, { width: contentWidth, ellipsis });
 
   // A filled line keeps its right indent as spaces, so it spans the full width.
-  if (align || fill) line = alignLine(line, contentWidth, align, fill) + ' '.repeat(rightIndent ?? 0);
+  if (align || fill) line = alignText(line, { width: contentWidth, align, fill }) + ' '.repeat(rightIndent ?? 0);
 
   return indentSpace + line;
 };

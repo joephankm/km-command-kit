@@ -235,7 +235,7 @@ export type MakeDefinitionsOptions<AsArray extends boolean = false> = Pick<
   /**
    * Arrangement of each label and its content.
    *
-   * @default 'aligned'
+   * @default 'stacked'
    */
   layout?: DefinitionLayout;
   /**
