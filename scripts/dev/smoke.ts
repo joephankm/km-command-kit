@@ -1,23 +1,30 @@
-import { markup } from '@/utils/shellStyle';
+import { docLog } from '@/utils/shellLog';
+import type { DefinitionItem } from '@/utils/shellStyle/types/markupTypes';
 
-const rows = [
-  ['-o', '--output', 'Write the result to the given file path'],
-  [null, '--verbose', 'Show more detail'],
-];
-console.log('--- columns ---');
-console.log(markup.makeColumns(rows, { width: 40 }));
-console.log('--- columns ellipsis ---');
-console.log(markup.makeColumns(rows, { width: 36, ellipsis: '…' }));
-console.log('--- columns per-column ---');
-console.log(markup.makeColumns(['name', '4 KB'], { width: { 0: 10, 1: 6 }, align: { 1: 'right' } }) + '|');
-
-const items = [
+const items: DefinitionItem[] = [
   { label: 'output', content: 'Write the result to the given file path' },
-  { label: 'verbose', content: ['Show more detail.', 'Repeat it for more.'] },
+  { label: 'dry run', content: 'Print every step without changing anything' },
 ];
-console.log('--- stacked ---');
-console.log(markup.makeDefinitions(items, { width: 30, marker: '•', stackedOptions: { contentIndent: 2 } }));
-console.log('--- aligned ---');
-console.log(markup.makeDefinitions(items, { layout: 'aligned', alignedOptions: { separator: ' : ' } }));
-console.log('--- inline ---');
-console.log(markup.makeDefinitions(items, { width: 30, layout: 'inline' }));
+
+const doc = docLog({
+  width: 40,
+  definitionLayouts: {
+    default: 'stacked',
+    stacked: { contentIndent: 2, labelStyle: 'emphasize' },
+    aligned: { separator: ' : ', labelStyle: ['bold', 'cyan'] },
+    inline: { labelStyle: 'title' },
+  },
+});
+
+doc.body('--- stacked: the configured label style (emphasize)');
+doc.definitions(items);
+doc.body('--- stacked, another option given: still the configured label style');
+doc.definitions(items, { stackedOptions: { labelSuffix: ':' } });
+doc.body('--- stacked, labelStyle given: error');
+doc.definitions(items, { stackedOptions: { labelStyle: 'error' } });
+doc.body('--- aligned: the configured label style (bold cyan)');
+doc.definitions(items, { layout: 'aligned' });
+doc.body('--- inline: the configured label style (title)');
+doc.definitions(items, { layout: 'inline' });
+doc.body('--- the default config: no label style');
+docLog({ width: 40 }).definitions(items);

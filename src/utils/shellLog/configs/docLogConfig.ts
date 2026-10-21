@@ -29,6 +29,28 @@ const docLogSettings: DocLogSettings = {
   numberedListType: 'decimal',
   listIndents: [0, 2, 6, 10],
   dividerFill: '─',
+  columnGap: 2,
+  definitionLayouts: {
+    default: 'stacked',
+    stacked: {
+      contentIndent: 2,
+      itemSpacing: 1,
+      contentSpacing: 0,
+      labelSuffix: '',
+      // contentMarker: '-',
+      labelStyle: ['brightBlue', 'underline'],
+    },
+    aligned: {
+      labelAlign: 'left',
+      // labelWidth: { max: 20 },
+      // separator: ' : ',
+      // labelStyle: 'emphasize',
+    },
+    inline: {
+      separator: '—',
+      // labelStyle: 'emphasize',
+    },
+  },
 };
 
 /**

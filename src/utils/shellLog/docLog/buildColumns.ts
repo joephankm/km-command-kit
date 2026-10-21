@@ -7,7 +7,7 @@ import type { DocLogFuncs } from './docLog';
  * Create the columns-printing method for a document log.
  */
 export default (
-  { width, indent, rightIndent }: DocLogSettings,
+  { width, indent, rightIndent, columnGap }: DocLogSettings,
   { styleFuncOf, startLines, endPrintLines }: DocLogFuncs
 ) => {
   /**
@@ -21,15 +21,15 @@ export default (
     const lines = startLines(spaceBefore);
 
     // Share the document width among the columns unless the call sets its own widths.
-    const block = markup.makeColumns(contents, {
+    const columnsBlock = markup.makeColumns(contents, {
       width: columnWidth ?? width,
       indent,
       rightIndent,
       align,
-      gap,
+      gap: gap ?? columnGap,
       ellipsis,
     });
-    lines.push(columnsStyleFunc ? columnsStyleFunc(block) : block);
+    lines.push(columnsStyleFunc ? columnsStyleFunc(columnsBlock) : columnsBlock);
 
     endPrintLines(lines, spaceAfter);
   };

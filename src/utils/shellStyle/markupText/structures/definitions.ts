@@ -4,18 +4,18 @@ import type {
   DefinitionMarker,
   MakeDefinitionsOptions,
   TextLines,
-} from '../types/markupTypes';
-import { makeColumns } from './columnsStructure';
-import { getListPrefixes } from './listUtils';
-import { initLineCollector, makeBlank } from './spacings';
-import { wrapText } from '../common/textUtils';
-import { initLineWrapper, LineWrapper } from './stringUtils';
+} from '../../types/markupTypes';
+import { makeColumns } from './columns';
+import { getListPrefixes } from './list';
+import { genLineCollector, makeBlank } from './blank';
+import { wrapText } from '../../common/textUtils';
+import { genLineWrapper, LineWrapper } from './block';
 
 const lineCollector = <AsArray extends boolean = false>(
   items: DefinitionItem[],
   options: MakeDefinitionsOptions<AsArray>
 ) => {
-  const lines = initLineCollector(options);
+  const lines = genLineCollector(options);
 
   const genMarkerPrefixes = (count: number, marker: DefinitionMarker) =>
     getListPrefixes(
@@ -23,7 +23,7 @@ const lineCollector = <AsArray extends boolean = false>(
       typeof marker === 'string' ? { marker } : { numbered: true, numberType: marker[0], marker: marker[1] }
     );
 
-  const lineWrapper = initLineWrapper({
+  const lineWrapper = genLineWrapper({
     ...options,
     ...(options.marker && genMarkerPrefixes(items.length, options.marker)),
   });
@@ -31,7 +31,7 @@ const lineCollector = <AsArray extends boolean = false>(
   let contentLineWrapper: LineWrapper<number> | undefined;
   if (options.layout === 'stacked') {
     const { contentIndent, contentMarker } = options.stackedOptions ?? {};
-    contentLineWrapper = initLineWrapper({
+    contentLineWrapper = genLineWrapper({
       ...options,
       indent: (contentIndent ?? 0) + lineWrapper.width(),
       ...(contentMarker &&
@@ -87,7 +87,7 @@ export const makeDefinitions = <AsArray extends boolean = false>(
     // Each label sits in a column, with its content beside it.
     // TODO: Apply the marker, indent, prefixes, and width to the aligned layout.
     case 'aligned': {
-      const { labelAlign, labelWidth, separator } = options.alignedOptions ?? {};
+      const { labelAlign, labelWidth, separator, labelStyle } = options.alignedOptions ?? {};
 
       // Each paragraph of the content is a row, with the label only on the first one.
       const rows: ColumnContent[][] = [];
@@ -109,6 +109,7 @@ export const makeDefinitions = <AsArray extends boolean = false>(
         makeColumns(rows, {
           width: labelWidth ? { 0: labelWidth } : undefined,
           align: labelAlign ? { 0: labelAlign } : undefined,
+          style: labelStyle ? { 0: labelStyle } : undefined,
           gap: separator ? 0 : undefined,
           asArray: true,
         })
@@ -118,27 +119,27 @@ export const makeDefinitions = <AsArray extends boolean = false>(
 
     // Each label and its content sit on one line, joined by the separator.
     case 'inline': {
-      const { separator = '—' } = options.inlineOptions ?? {};
+      const { separator = '—', labelStyle } = options.inlineOptions ?? {};
 
       for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
         const { label, content } = items[itemIndex]!;
         const text = typeof content === 'string' ? content : content.join(' ');
 
-        lines.pushLine(label + ' ' + separator + ' ' + text, itemIndex);
+        lines.pushLine((labelStyle ? labelStyle(label) : label) + ' ' + separator + ' ' + text, itemIndex);
       }
       break;
     }
 
     // Each label sits on its own line, with its content below.
     default: {
-      const { itemSpacing = 1, contentSpacing, labelSuffix = '' } = options.stackedOptions ?? {};
+      const { itemSpacing = 1, contentSpacing, labelSuffix = '', labelStyle } = options.stackedOptions ?? {};
 
       for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
         const { label, content } = items[itemIndex]!;
 
         if (itemSpacing && itemIndex > 0) lines.pushBlank(itemSpacing);
 
-        lines.pushLine(label + labelSuffix, itemIndex);
+        lines.pushLine((labelStyle ? labelStyle(label) : label) + labelSuffix, itemIndex);
 
         if (typeof content === 'string') {
           lines.pushLine(content, 0, true);

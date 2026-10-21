@@ -1,4 +1,4 @@
-import type { MarkupOptions, TextLines } from '../types/markupTypes';
+import type { MarkupOptions, TextLines } from '../../types/markupTypes';
 
 /**
  * Options for blank lines: whether they come back as an array.
@@ -46,7 +46,7 @@ type LineCollector<AsArray extends boolean> = {
  *
  * @example `{ spaceBefore: 1 }`, then `push('parse')` and `result()` => `\nparse`
  */
-export const initLineCollector = <AsArray extends boolean = false>(
+export const genLineCollector = <AsArray extends boolean = false>(
   { spaceBefore, spaceAfter, asArray }: LineCollectorOptions<AsArray>,
   wrapFunc?: (line: string) => string
 ): LineCollector<AsArray> => {

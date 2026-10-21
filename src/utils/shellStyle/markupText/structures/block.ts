@@ -1,5 +1,7 @@
-import { stripStyles } from '../common/styleExcapeUtils';
-import type { MarkupOptions } from '../types/markupTypes';
+import { stripStyles } from '../../common/styleExcapeUtils';
+import { wrapText } from '../../common/textUtils';
+import type { MakeBlockOptions, MarkupOptions, TextLines } from '../../types/markupTypes';
+import { genLineCollector, makeBlank } from './blank';
 
 /**
  * Options for wrapping a line: the indents and the text set before and after it.
@@ -40,7 +42,7 @@ export type LineWrapper<Value = unknown> = {
  *
  * @example `{ linePrefix: '│', indent: 2, contentPrefix: '> ' }`, then `line('parse')` => `│  > parse`
  */
-export const initLineWrapper = <Value = unknown>({
+export const genLineWrapper = <Value = unknown>({
   width,
   indent,
   rightIndent,
@@ -84,4 +86,43 @@ export const initLineWrapper = <Value = unknown>({
     firstLine: firstPrefix ? text => firstPrefix + text + suffix : line,
     width: (target = 'line') => (target === 'firstLine' ? firstLineWidth : lineWidth),
   };
+};
+
+/**
+ * Formats text blocks for presentation.
+ *
+ * Supports:
+ * - Multiple paragraphs, wrapping, and alignment.
+ * - Line prefixes and suffixes, left and right indents, and surrounding blank lines.
+ * - Returning a string or an array of lines.
+ *
+ * @example `parse the input now`, `{ width: 12, align: 'right' }` =>
+ * `   parse the\n   input now`, or with `asArray`, `['   parse the', '   input now']`
+ */
+export const makeBlock = <AsArray extends boolean = false>(
+  text: string | string[],
+  options: MakeBlockOptions<AsArray> = {}
+): TextLines<AsArray> => {
+  const wrapper = genLineWrapper(options);
+  const lines = genLineCollector(options, wrapper.line);
+  const between = options.spaceBetween ? makeBlank(options.spaceBetween, { asArray: true }) : undefined;
+
+  const paragraphs = typeof text === 'string' ? text.split('\n') : text;
+
+  // The text wraps within what the prefixes and suffix leave.
+  const contentWidth = options.width ? options.width - wrapper.width() : 0;
+
+  for (let index = 0; index < paragraphs.length; index++) {
+    const paragraph = paragraphs[index]!;
+
+    if (between && index > 0) lines.push(between, true);
+
+    if (options.width) {
+      lines.push(wrapText(paragraph, { width: contentWidth, align: options.align, formatLine: wrapper.line }), true);
+    } else {
+      lines.push(paragraph);
+    }
+  }
+
+  return lines.result();
 };

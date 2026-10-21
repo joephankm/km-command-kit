@@ -1,10 +1,14 @@
 import type { NumberStyleName } from '../../shellStyle/common/numberStyles';
 import type { ValueOrParams } from '../../shellStyle/types/commonTypes';
 import type {
+  AlignedDefinitionOptions,
+  DefinitionLayout,
+  InlineDefinitionOptions,
   MakeColumnsOptions,
   MakeDefinitionsOptions,
   MarkupOptions,
   ShellTextStyle,
+  StackedDefinitionOptions,
 } from '../../shellStyle/types/markupTypes';
 import type { BulletListType, NumberedListType } from '../configs/docLogConfig';
 
@@ -55,6 +59,29 @@ export type DocLogStyles = Partial<Record<'default' | 'divider' | (string & {}),
  * Style reference accepted by document log methods.
  */
 export type DocLogStyle = ShellTextStyle | (string & {});
+
+/**
+ * Options of a definition list layout, with its label style given as a text style rather than a
+ * style function.
+ */
+type TextLabelStyle<Options> = Omit<Options, 'labelStyle'> & {
+  /** Style each label is set in: a preset name, or a list of style code names. */
+  labelStyle?: ShellTextStyle;
+};
+
+/**
+ * The default definition list layout, and every option of each layout.
+ */
+export type DefinitionLayouts = {
+  /** Layout used when a call gives none. */
+  default: DefinitionLayout;
+  /** Options of the `'stacked'` layout. */
+  stacked: TextLabelStyle<StackedDefinitionOptions>;
+  /** Options of the `'aligned'` layout. */
+  aligned: TextLabelStyle<AlignedDefinitionOptions>;
+  /** Options of the `'inline'` layout. */
+  inline: TextLabelStyle<InlineDefinitionOptions>;
+};
 
 /**
  * Configuration options for a document log and its methods.
@@ -111,6 +138,16 @@ export type DocLogOptions = Pick<MarkupOptions, 'width' | 'indent' | 'rightInden
    */
   dividerFill?: string;
   /**
+   * Blank columns between every two columns, unless a call gives its own `gap`.
+   *
+   * @default 1
+   */
+  columnGap?: number;
+  /**
+   * Every option of each definition list layout, taken by a call for every option it does not give.
+   */
+  definitionLayouts?: DefinitionLayouts;
+  /**
    * Variant used to format a title.
    */
   variant?: TitleVariantName;
@@ -159,7 +196,7 @@ export type DocLogSettings = Pick<
   | 'listIndents'
   | 'dividerFill'
 > &
-  Required<Pick<DocLogOptions, 'bulletListType' | 'numberedListType'>>;
+  Required<Pick<DocLogOptions, 'bulletListType' | 'numberedListType' | 'columnGap' | 'definitionLayouts'>>;
 
 /**
  * Per-title formatting options.
@@ -231,8 +268,11 @@ export type ColumnsOptions = Pick<MakeColumnsOptions, 'width' | 'align' | 'gap' 
 /**
  * Per-call definition list layout and formatting options.
  */
-export type DefinitionsOptions = Pick<
-  MakeDefinitionsOptions,
-  'layout' | 'marker' | 'align' | 'alignedOptions' | 'stackedOptions' | 'inlineOptions'
-> &
-  Pick<DocLogOptions, 'style' | 'spaceBefore' | 'spaceAfter'>;
+export type DefinitionsOptions = Pick<MakeDefinitionsOptions, 'layout' | 'marker' | 'align'> & {
+  /** Options of the `'aligned'` layout, laid over the configured ones. */
+  alignedOptions?: DefinitionLayouts['aligned'];
+  /** Options of the `'stacked'` layout, laid over the configured ones. */
+  stackedOptions?: DefinitionLayouts['stacked'];
+  /** Options of the `'inline'` layout, laid over the configured ones. */
+  inlineOptions?: DefinitionLayouts['inline'];
+} & Pick<DocLogOptions, 'style' | 'spaceBefore' | 'spaceAfter'>;

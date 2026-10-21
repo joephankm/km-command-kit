@@ -2,10 +2,10 @@
 name: shellLog
 description:
   Terminal logging — a leveled logger with styled labels and an optional detail line, a task logger that narrates a run
-  as nested actions and operations, and a doc logger that prints titles, text and lists.
+  as nested actions and operations, and a doc logger that prints titles, text, lists, columns and definition lists.
 labels: ['shell', 'terminal', 'log', 'task', 'doc']
-version: 1.2.1
-updated: 2026-10-09
+version: 1.3.0
+updated: 2026-10-21
 ---
 
 # Shell Log
@@ -18,8 +18,8 @@ terminal/shell context — not portable to a browser or other JS environment.
 - **Logger** (`logger`) — leveled one-off logging: `verbose`, `info`, `warn`, `error`.
 - **Task Log** (`task`) — narrates one run from start to finish, with actions and operations under it, step numbers,
   held success messages, and elapsed times.
-- **Doc Log** (`docLog`) — document-style output: titles, body text, nested lists, and dividers, laid out within a
-  width.
+- **Doc Log** (`docLog`) — document-style output: titles, body text, nested lists, columns, definition lists, and
+  dividers, laid out within a width.
 
 **Dependencies**
 
@@ -158,8 +158,8 @@ are measured from when each level opened, and a level's line can show its own, i
 
 ## Doc Log
 
-`docLog` creates an instance that prints document-style terminal output: titles, body paragraphs, nested lists, and
-dividers. Instance options override the configured defaults; method options customize individual blocks. The methods
+`docLog` creates an instance that prints document-style terminal output: titles, body paragraphs, nested lists,
+columns, definition lists, and dividers. Instance options override the configured defaults; method options customize individual blocks. The methods
 print directly with `console.log` and return no formatted text.
 
 ```ts
@@ -206,12 +206,14 @@ title-variant map.
 
 ### Methods
 
-| Method                 | Description                                                                    |
-| ---------------------- |--------------------------------------------------------------------------------|
-| `title(text, variant)` | Prints a title variant; pass its name or an options object with `variant`      |
-| `body(text, options?)` | Prints text wrapped to the width; line breaks in the input separate paragraphs |
-| `list(items, options?)`| Prints a bulleted or numbered list, including nested items                     |
-| `divider(options?)`    | Prints a divider across the configured width                                   |
+| Method                        | Description                                                                    |
+| ----------------------------- | ------------------------------------------------------------------------------ |
+| `title(text, variant)`        | Prints a title variant; pass its name or an options object with `variant`      |
+| `body(text, options?)`        | Prints text wrapped to the width; line breaks in the input separate paragraphs |
+| `list(items, options?)`       | Prints a bulleted or numbered list, including nested items                     |
+| `columns(contents, options?)` | Prints content in columns without borders, sharing the configured width        |
+| `definitions(items, options?)`| Prints a definition list: every label shown with its content                   |
+| `divider(options?)`           | Prints a divider across the configured width                                   |
 
 **Titles.** Each entry in `titles` sets a variant's style and may set a `numberMarker` such as `['upperRoman', '.']`,
 `underline`, and `lineFill`. Numbering is off unless the call sets `numbered: true`; numbering requires a marker, and
@@ -231,11 +233,66 @@ doc.list([{ text: 'Pick a region', level: 2 }, 'Run']);
 
 Numbers are right-aligned to the widest number at their level. Each list level starts counting from `1`.
 
+**Columns.** `contents` is one row as a `string[]`, or a block of rows as a `string[][]`; `null` is an empty cell. The
+columns share the instance's `width`: every column but the last is as wide as its widest content, and the last takes
+what remains, wrapping a cell that is wider. `columnGap` sets the blank columns between every two columns, `2` by
+default; a call's `gap` takes its place. A call's `width` sets each column's width by position instead, and `ellipsis`
+cuts a wide cell instead of wrapping it:
+
+```ts
+doc.columns([
+  ['-o', '--output', 'Write the result to the given file path'],
+  [null, '--verbose', 'Show more detail'],
+]);
+```
+
+```
+-o  --output   Write the result to the
+               given file path
+    --verbose  Show more detail
+```
+
+**Definitions.** Each item is `{ label, content }`, where `content` is one paragraph or an array of them. `layout` picks
+how each label sits with its content: `'stacked'`, the label on its own line with its content below; `'aligned'`, the
+label in a column with its content beside it; or `'inline'`, the label and its content on one line. `marker` leads each
+item, as a mark such as `'•'` or a `[numberType, marker]` pair to number them:
+
+```ts
+doc.definitions([
+  { label: 'output', content: 'Write the result to the given file path' },
+  { label: 'verbose', content: ['Show more detail.', 'Repeat it for more.'] },
+]);
+doc.definitions([{ label: 'Usage', content: 'kit build [--watch]' }], { layout: 'inline' });
+```
+
+```
+output
+  Write the result to the given file
+  path
+
+verbose
+  Show more detail.
+  Repeat it for more.
+
+Usage — kit build [--watch]
+```
+
+`definitionLayouts` holds the layout used when a call gives none, as `default`, and every option of each layout:
+`stacked`, `aligned`, and `inline`. A call's `stackedOptions`, `alignedOptions`, or `inlineOptions` is laid over its
+layout's entry option by option, so a call gives only what it changes and takes the rest from the instance:
+
+```ts
+doc.definitions(items, { stackedOptions: { labelSuffix: ':' } }); // keeps the configured `contentIndent`
+```
+
+The `'aligned'` layout does not yet apply `marker`, `width`, `indent`, or `rightIndent`: its content shows as it is,
+without wrapping.
+
 ### Spacing
 
 `spacing` sets the blank lines between blocks and defaults to `1`. A block's `spaceBefore` or `spaceAfter` overrides the
-spacing on that side. Body paragraphs are separated by one blank line. `spaceAfter` is supported by body, list, and
-divider; titles only accept `spaceBefore`.
+spacing on that side. Body paragraphs are separated by one blank line. `spaceAfter` is supported by body, list,
+columns, definitions, and divider; titles only accept `spaceBefore`.
 
 ### Styles
 
@@ -249,8 +306,9 @@ doc.body('Muted text.');
 doc.body('An aside.', { style: 'note' });
 ```
 
-Configured styles are prepared when the instance is created. `body` and `divider` calls accept `style` to override
-their configured style with a preset name or an array of style code names.
+Configured styles are prepared when the instance is created. `body`, `columns`, `definitions`, and `divider` calls accept
+`style` to override their configured style with a preset name or an array of style code names. `columns` and
+`definitions` use `default` otherwise.
 
 ### Options
 
@@ -267,13 +325,24 @@ their configured style with a preset name or an array of style code names.
 | `numberedListType` | `'decimal'` or `'outline'`                   | `docLog`                           | Number format and marker pattern by nesting level                  |
 | `listIndents`      | number[]                                     | `docLog`                           | Starting column for each level; deeper levels reuse the last value |
 | `dividerFill`      | string                                       | `docLog`                           | Character repeated across dividers; defaults to `'─'`              |
+| `columnGap`        | number                                       | `docLog`                           | Blank columns between every two columns; defaults to `2`           |
+| `definitionLayouts` | `default` layout, and `stacked`, `aligned`, `inline` options | `docLog`         | The layout used when a call gives none, and each layout's options  |
 | `numbered`         | boolean                                      | `title`, `list`                    | Numbers titles or list items                                       |
 | `dividerBefore`    | boolean                                      | `title`                            | Prints a divider before the title                                  |
 | `underline`        | boolean                                      | `title`                            | Overrides the variant underline setting                            |
-| `align`            | `'left'`, `'center'`, `'right'`, `'justify'` | `title`, `body`, `list`            | Alignment within the configured width                              |
-| `style`            | style name or code names                     | `body`, `divider`                  | Per-call style override                                            |
-| `spaceBefore`      | number                                       | `title`, `body`, `list`, `divider` | Blank lines before this block, overriding `spacing`                |
-| `spaceAfter`       | number                                       | `body`, `list`, `divider`          | Blank lines after this block, overriding `spacing`                 |
+| `align`            | `'left'`, `'center'`, `'right'`, `'justify'` | `title`, `body`, `list`, `definitions` | Alignment within the configured width                          |
+| `align`            | one alignment, or a record by column position | `columns`                         | Alignment of every column, or of each column by position           |
+| `width`            | record of column position to `ColumnWidth`   | `columns`                          | Each column's exact width or `{ min, max }`, in place of `width`   |
+| `gap`              | number, or a record by column position       | `columns`                          | Blank columns after each column, overriding `columnGap`            |
+| `ellipsis`         | string or `true`                             | `columns`                          | Cuts a cell wider than its column instead of wrapping it           |
+| `layout`           | `'stacked'`, `'aligned'` or `'inline'`       | `definitions`                      | Layout of this list, overriding `definitionLayouts.default`        |
+| `marker`           | string, or `[numberType, marker]`            | `definitions`                      | Mark or number leading each item                                   |
+| `stackedOptions`   | stacked layout options                       | `definitions`                      | Laid over `definitionLayouts.stacked`, option by option            |
+| `alignedOptions`   | aligned layout options                       | `definitions`                      | Laid over `definitionLayouts.aligned`, option by option            |
+| `inlineOptions`    | inline layout options                        | `definitions`                      | Laid over `definitionLayouts.inline`, option by option             |
+| `style`            | style name or code names                     | `body`, `columns`, `definitions`, `divider` | Per-call style override                                   |
+| `spaceBefore`      | number                                       | every method                       | Blank lines before this block, overriding `spacing`                |
+| `spaceAfter`       | number                                       | every method but `title`           | Blank lines after this block, overriding `spacing`                 |
 | `fill`             | string                                       | `divider`                          | Character used for this divider, overriding `dividerFill`          |
 
 **Width matters for lists:** list markers and indentation are added by the markup formatter only when an instance has a
@@ -288,7 +357,7 @@ their configured style with a preset name or an array of style code names.
 | `logger`          | `logger/simpleLogger.ts` | `Record<ShellLogLevel, ShellLogFunc>` (default export) — leveled logging functions |
 | `configureLogger` | `logger/simpleLogger.ts` | `(config: Partial<{ verbose: boolean }>) => void` — updates runtime config         |
 | `task`            | `taskLog/taskLog.ts`     | Task logger (default export) — `start`, `doing`, `sub`, `done`, `fail`             |
-| `docLog`          | `docLog/docLog.ts`       | Doc logger factory (default export) — returns `title`, `body`, `list`, `divider`   |
+| `docLog`          | `docLog/docLog.ts`       | Doc logger factory (default export) — returns `title`, `body`, `list`, `columns`, `definitions`, `divider` |
 | `ShellLogLevel`   | `types/logTypes.ts`      | Type: `'verbose' \| 'info' \| 'warn' \| 'error'`                                   |
 | `ShellLogFunc`    | `types/logTypes.ts`      | Type: `(message: string, detail?: string) => void`                                 |
 
@@ -326,20 +395,16 @@ inside a duration format. Every name is listed as an enum in `constants/taskLogC
 - `types/docLogTypes.ts` — doc log types: its settings, each method's options, title variants and list items.
 - `constants/taskLogConstants.ts` — the level enum, the format/step/label/duration placeholder enums, and the patterns
   used to match them.
+- `constants/docLogConstants.ts` — list markers and number types for each list level.
 - `configs/taskLogConfig.ts` — the settings and line formats described above.
 - `configs/docLogConfig.ts` — the Doc Log's settings and its bulleted and numbered list styles.
-- `common/paramUtils.ts` — reads an argument given as a value or as a full params object; independent, so it can be
-  copied out on its own.
-- `logger/simpleLogger.ts` — Logger component: builds the leveled `logger` (default export) and `configureLogger`, using
-  `shellStyle` for label, message, and detail styling.
-- `taskLog/taskLog.ts` — Task Log component: the five methods, the per-level state behind step counters and durations.
-- `taskLog/displayOptions.ts` — holds the run's options and collapses the display cascade for one line.
-- `taskLog/printers.ts` — renders and prints a line: its step, its label, and the message a closing level held.
-- `taskLog/formatters.ts` — fills a format's placeholders, and renders wall-clock times and durations.
-- `taskLog/messageBag.ts` — holds each level's declared message until the call that closes that level takes it back out.
-- `docLog/docLog.ts` — Doc Log component: merges the settings, creates the named styles once, and builds each method.
-- `docLog/buildTitle.ts`, `buildBody.ts`, `buildList.ts`, `buildDivider.ts` — each builds one method of an instance from
-  its settings and the functions the instance shares.
+- `logger/` — the Logger component: the leveled `logger` and `configureLogger`.
+- `taskLog/` — the Task Log component: one run narrated as nested actions and operations, with the display options,
+  printing and formatting behind each line.
+- `docLog/` — the Doc Log component: `docLog.ts` creates an instance, and each `build*.ts` file builds one of its
+  methods.
+- `common/` — general-purpose helpers not tied to this util, such as reading an argument given as a value or as a full
+  params object.
 
 ---
 

@@ -1,9 +1,9 @@
-import type { ValueOrIndexed } from '../types/commonTypes';
-import type { ColumnContent, MakeColumnsOptions, TextLines } from '../types/markupTypes';
-import { alignText, wrapText, truncateText } from '../common/textUtils';
-import { stripStyles } from '../common/styleExcapeUtils';
-import { initLineCollector } from './spacings';
-import { initLineWrapper } from './stringUtils';
+import type { ValueOrIndexed } from '../../types/commonTypes';
+import type { ColumnContent, MakeColumnsOptions, TextLines } from '../../types/markupTypes';
+import { alignText, wrapText, truncateText } from '../../common/textUtils';
+import { stripStyles } from '../../common/styleExcapeUtils';
+import { genLineCollector } from './blank';
+import { genLineWrapper } from './block';
 
 /**
  * The values of a column: each one as its mapper returns it, or as given when it has no mapper.
@@ -163,23 +163,24 @@ const processContents = (contentRows: ColumnContent[][], { columns, truncate, el
  */
 export const makeColumns = <AsArray extends boolean = false>(
   contents: ColumnContent[] | ColumnContent[][],
-  { width, gap = 1, align, ellipsis, ...restOptions }: MakeColumnsOptions<AsArray> = {}
+  { width, gap = 1, align, ellipsis, style, ...restOptions }: MakeColumnsOptions<AsArray> = {}
 ): TextLines<AsArray> => {
   const inputRows = (!Array.isArray(contents[0]) ? [contents] : contents) as ColumnContent[][];
   const columnCount = Math.max(0, ...inputRows.map(row => row.length));
 
-  const wrapper = initLineWrapper({ width: typeof width === 'number' ? width : undefined, ...restOptions });
+  const wrapper = genLineWrapper({ width: typeof width === 'number' ? width : undefined, ...restOptions });
 
   const columns = normalizeColumns(columnCount, {
     columns: {
       align,
       gap,
+      style,
       width: calcColumnWidths(inputRows, { width: typeof width === 'number' ? width - wrapper.width() : width, gap }),
     },
     mappers: { gap: (size: number) => ' '.repeat(size) },
   });
 
-  const lines = initLineCollector(restOptions, wrapper.line);
+  const lines = genLineCollector(restOptions, wrapper.line);
 
   const contentRows = processContents(inputRows, {
     columns,
@@ -191,10 +192,9 @@ export const makeColumns = <AsArray extends boolean = false>(
     // Each cell fills its column's width, or shows as it is without one.
     const contentLines = rowContents.map((colContent, index) => {
       const column = columns[index];
+      const text = colContent && column?.style ? column.style(colContent) : (colContent ?? '');
       const content =
-        column?.width === undefined
-          ? (colContent ?? '')
-          : alignText(colContent ?? '', { width: column.width, align: column.align, fill: ' ' });
+        column?.width === undefined ? text : alignText(text, { width: column.width, align: column.align, fill: ' ' });
 
       return index < rowContents.length - 1 ? content + (column?.gap ?? ' ') : content;
     });

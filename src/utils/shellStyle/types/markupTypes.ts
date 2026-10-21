@@ -202,6 +202,10 @@ export type MakeColumnsOptions<AsArray extends boolean = false> = Pick<
    * default mark.
    */
   ellipsis?: string | true;
+  /**
+   * Style function of every column, or of each column keyed by its position.
+   */
+  style?: ValueOrIndexed<ShellStyleFunc>;
 };
 
 /**
@@ -226,6 +230,48 @@ export type DefinitionLayout = 'aligned' | 'stacked' | 'inline';
 export type DefinitionMarker = string | [numberType: NumberStyleName, marker: string];
 
 /**
+ * Options of the `'aligned'` layout of a definition list.
+ */
+export type AlignedDefinitionOptions = {
+  /** Alignment of each label within its column. Default is `'left'`. */
+  labelAlign?: ColumnAlign;
+  /** Width of the label column, exact or held within bounds. */
+  labelWidth?: ColumnWidth;
+  /** Text set between the label column and the content. */
+  separator?: string;
+  /** Style function applied to each label. */
+  labelStyle?: ShellStyleFunc;
+};
+
+/**
+ * Options of the `'stacked'` layout of a definition list.
+ */
+export type StackedDefinitionOptions = {
+  /** Columns the content is pushed right past its label. */
+  contentIndent?: number;
+  /** Blank lines between two items. Default is `1`. */
+  itemSpacing?: number;
+  /** Blank lines between the paragraphs of an item's content. */
+  contentSpacing?: number;
+  /** Text set right after each label. */
+  labelSuffix?: string;
+  /** Mark shown at the start of each paragraph of the content. */
+  contentMarker?: DefinitionMarker;
+  /** Style function applied to each label. */
+  labelStyle?: ShellStyleFunc;
+};
+
+/**
+ * Options of the `'inline'` layout of a definition list.
+ */
+export type InlineDefinitionOptions = {
+  /** Text set between each label and its content. Default is `'—'`. */
+  separator?: string;
+  /** Style function applied to each label. */
+  labelStyle?: ShellStyleFunc;
+};
+
+/**
  * Layout settings for a definition list.
  */
 export type MakeDefinitionsOptions<AsArray extends boolean = false> = Pick<
@@ -245,36 +291,15 @@ export type MakeDefinitionsOptions<AsArray extends boolean = false> = Pick<
   /**
    * Options of the `'aligned'` layout.
    */
-  alignedOptions?: {
-    /** Alignment of each label within its column. Default is `'left'`. */
-    labelAlign?: ColumnAlign;
-    /** Width of the label column, exact or held within bounds. */
-    labelWidth?: ColumnWidth;
-    /** Text set between the label column and the content. */
-    separator?: string;
-  };
+  alignedOptions?: AlignedDefinitionOptions;
   /**
    * Options of the `'stacked'` layout.
    */
-  stackedOptions?: {
-    /** Columns the content is pushed right past its label. */
-    contentIndent?: number;
-    /** Blank lines between two items. Default is `1`. */
-    itemSpacing?: number;
-    /** Blank lines between the paragraphs of an item's content. */
-    contentSpacing?: number;
-    /** Text set right after each label. */
-    labelSuffix?: string;
-    /** Mark shown at the start of each paragraph of the content. */
-    contentMarker?: DefinitionMarker;
-  };
+  stackedOptions?: StackedDefinitionOptions;
   /**
    * Options of the `'inline'` layout.
    */
-  inlineOptions?: {
-    /** Text set between each label and its content. Default is `'—'`. */
-    separator?: string;
-  };
+  inlineOptions?: InlineDefinitionOptions;
 };
 
 /**
