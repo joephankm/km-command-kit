@@ -4,8 +4,8 @@ description:
   Terminal logging — a leveled logger with styled labels and an optional detail line, a task logger that narrates a run
   as nested actions and operations, and a doc logger that prints titles, text, lists, columns and definition lists.
 labels: ['shell', 'terminal', 'log', 'task', 'doc']
-version: 1.3.0
-updated: 2026-10-21
+version: 1.3.1
+updated: 2026-10-29
 ---
 
 # Shell Log

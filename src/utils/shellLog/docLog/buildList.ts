@@ -15,12 +15,9 @@ const toItemParams = makeToParams<ListItemParams, 'text'>('text');
  * Create the list-printing method for a document log.
  */
 export default (
-  { width, indent: docIndent = 0, rightIndent, bulletListType, numberedListType, listIndents }: DocLogSettings,
+  { width, bulletListType, numberedListType, listIndents }: DocLogSettings,
   { defaultAlign, startLines, endPrintLines }: DocLogFuncs
 ) => {
-  // Shared width and right indent for list items.
-  const blockOptions = { width, rightIndent };
-
   // Marker styles by level; reuse the configured sequence for deeper levels.
   const bullets = config.bulletListStyles[bulletListType];
   const numberMarkers = config.numberedListStyles[numberedListType];
@@ -33,10 +30,11 @@ export default (
     items: ListItem[],
     level: number,
     numbered: boolean,
-    align: TextAlign | undefined
+    align: TextAlign | undefined,
+    baseIndent: number
   ) => {
     // Reuse the final configured indent for deeper levels; default all levels to zero.
-    const indent = docIndent + (listIndents?.length ? listIndents[Math.min(level, listIndents.length) - 1]! : 0);
+    const indent = baseIndent + (listIndents?.length ? listIndents[Math.min(level, listIndents.length) - 1]! : 0);
     let textBag: string[] = [];
 
     // Keep numbering continuous within this level and align numbers to a shared width.
@@ -61,7 +59,7 @@ export default (
 
         lines.push(
           ...markup.makeList(textBag, {
-            ...blockOptions,
+            width,
             indent,
             align,
             numbered,
@@ -77,7 +75,7 @@ export default (
       } else {
         lines.push(
           ...markup.makeList(textBag, {
-            ...blockOptions,
+            width,
             indent,
             align,
             marker: bullets[(level - 1) % bullets.length],
@@ -97,7 +95,7 @@ export default (
 
       if (nestedItems?.length) {
         finishLevel();
-        traverseItemsAndPush(lines, nestedItems, level + 1, numbered, align);
+        traverseItemsAndPush(lines, nestedItems, level + 1, numbered, align, baseIndent);
       }
     }
 
@@ -107,7 +105,7 @@ export default (
   /**
    * Print a formatted list.
    */
-  return (items: TopListItem[], { numbered = false, align, spaceBefore, spaceAfter }: ListOptions = {}) => {
+  return (items: TopListItem[], { numbered = false, indent = 0, align, spaceBefore, spaceAfter }: ListOptions = {}) => {
     const lines = startLines(spaceBefore);
     const listAlign = defaultAlign(align);
 
@@ -123,7 +121,7 @@ export default (
 
         if (level !== currLevel) {
           if (itemsBag.length) {
-            traverseItemsAndPush(lines, itemsBag, currLevel, numbered, listAlign);
+            traverseItemsAndPush(lines, itemsBag, currLevel, numbered, listAlign, indent);
             itemsBag = [];
           }
 
@@ -133,9 +131,9 @@ export default (
         itemsBag.push(item);
       }
 
-      traverseItemsAndPush(lines, itemsBag, currLevel, numbered, listAlign);
+      traverseItemsAndPush(lines, itemsBag, currLevel, numbered, listAlign, indent);
     } else {
-      traverseItemsAndPush(lines, items, 1, numbered, defaultAlign(align));
+      traverseItemsAndPush(lines, items, 1, numbered, defaultAlign(align), indent);
     }
 
     endPrintLines(lines, spaceAfter);

@@ -1,5 +1,5 @@
 import type { NumberStyleName } from '../../shellStyle/common/numberStyles';
-import type { ValueOrParams } from '../../shellStyle/types/commonTypes';
+import type { ValueOrIndexed, ValueOrParams } from '../../shellStyle/types/commonTypes';
 import type {
   AlignedDefinitionOptions,
   DefinitionLayout,
@@ -86,7 +86,7 @@ export type DefinitionLayouts = {
 /**
  * Configuration options for a document log and its methods.
  */
-export type DocLogOptions = Pick<MarkupOptions, 'width' | 'indent' | 'rightIndent' | 'align'> & {
+export type DocLogOptions = Pick<MarkupOptions, 'width' | 'indent' | 'align'> & {
   /**
    * Named styles available to document log methods.
    */
@@ -186,22 +186,17 @@ export type DocLogOptions = Pick<MarkupOptions, 'width' | 'indent' | 'rightInden
  */
 export type DocLogSettings = Pick<
   DocLogOptions,
-  | 'width'
-  | 'indent'
-  | 'rightIndent'
-  | 'styles'
-  | 'titles'
-  | 'justifyContent'
-  | 'spacing'
-  | 'listIndents'
-  | 'dividerFill'
+  'width' | 'styles' | 'titles' | 'justifyContent' | 'spacing' | 'listIndents' | 'dividerFill'
 > &
   Required<Pick<DocLogOptions, 'bulletListType' | 'numberedListType' | 'columnGap' | 'definitionLayouts'>>;
 
 /**
  * Per-title formatting options.
  */
-export type TitleOptions = Pick<DocLogOptions, 'numbered' | 'dividerBefore' | 'underline' | 'align' | 'spaceBefore'> &
+export type TitleOptions = Pick<
+  DocLogOptions,
+  'numbered' | 'dividerBefore' | 'underline' | 'indent' | 'align' | 'spaceBefore'
+> &
   Required<Pick<DocLogOptions, 'variant'>>;
 
 /**
@@ -212,7 +207,12 @@ export type TitleVariantOrOptions = ValueOrParams<TitleOptions, 'variant'>;
 /**
  * Per-call formatting options for body text.
  */
-export type BodyOptions = Pick<DocLogOptions, 'align' | 'style' | 'spaceBefore' | 'spaceAfter'>;
+export type BodyOptions = Pick<DocLogOptions, 'indent' | 'align' | 'style' | 'spaceBefore' | 'spaceAfter'>;
+
+/**
+ * Per-call formatting options for a single line.
+ */
+export type LineOptions = Pick<DocLogOptions, 'indent' | 'style' | 'spaceBefore' | 'spaceAfter'>;
 
 /**
  * Per-call formatting options for a divider.
@@ -257,13 +257,19 @@ export type TopListItem =
 /**
  * Per-list formatting options.
  */
-export type ListOptions = Pick<DocLogOptions, 'numbered' | 'align' | 'spaceBefore' | 'spaceAfter'>;
+export type ListOptions = Pick<DocLogOptions, 'numbered' | 'indent' | 'align' | 'spaceBefore' | 'spaceAfter'>;
 
 /**
  * Per-call column layout and formatting options.
  */
 export type ColumnsOptions = Pick<MakeColumnsOptions, 'width' | 'align' | 'gap' | 'ellipsis'> &
-  Pick<DocLogOptions, 'style' | 'spaceBefore' | 'spaceAfter'>;
+  Pick<DocLogOptions, 'indent' | 'spaceBefore' | 'spaceAfter'> & {
+    /**
+     * Style of every column, or of each column keyed by its position. A column without a style of
+     * its own takes the `default` style.
+     */
+    style?: ValueOrIndexed<DocLogStyle | undefined>;
+  };
 
 /**
  * Per-call definition list layout and formatting options.
@@ -275,4 +281,4 @@ export type DefinitionsOptions = Pick<MakeDefinitionsOptions, 'layout' | 'marker
   stackedOptions?: DefinitionLayouts['stacked'];
   /** Options of the `'inline'` layout, laid over the configured ones. */
   inlineOptions?: DefinitionLayouts['inline'];
-} & Pick<DocLogOptions, 'style' | 'spaceBefore' | 'spaceAfter'>;
+} & Pick<DocLogOptions, 'indent' | 'style' | 'spaceBefore' | 'spaceAfter'>;

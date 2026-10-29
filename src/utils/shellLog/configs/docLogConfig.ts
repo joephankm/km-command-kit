@@ -48,6 +48,7 @@ const docLogSettings: DocLogSettings = {
     },
     inline: {
       separator: '—',
+      // gap: 1,
       // labelStyle: 'emphasize',
     },
   },

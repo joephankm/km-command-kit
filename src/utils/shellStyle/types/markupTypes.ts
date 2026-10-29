@@ -267,6 +267,8 @@ export type StackedDefinitionOptions = {
 export type InlineDefinitionOptions = {
   /** Text set between each label and its content. Default is `'—'`. */
   separator?: string;
+  /** Blank columns between the separator and the content. Default is `1`. */
+  gap?: number;
   /** Style function applied to each label. */
   labelStyle?: ShellStyleFunc;
 };

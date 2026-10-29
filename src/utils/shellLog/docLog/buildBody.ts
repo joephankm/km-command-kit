@@ -6,22 +6,20 @@ import type { DocLogFuncs } from './docLog';
  * Create the body-printing method for a document log.
  */
 export default (
-  { width, indent, rightIndent, spacing }: DocLogSettings,
+  { width, spacing }: DocLogSettings,
   { styleFuncOf, defaultAlign, startLines, endPrintLines }: DocLogFuncs
 ) => {
-  // Shared width and indents for body text.
-  const blockOptions = { width, indent, rightIndent };
-
   /**
    * Print formatted body text.
    */
-  return (text: string, { align, style, spaceBefore, spaceAfter }: BodyOptions = {}) => {
+  return (text: string, { indent, align, style, spaceBefore, spaceAfter }: BodyOptions = {}) => {
     const bodyStyleFunc = styleFuncOf(style ?? 'default');
     const lines = startLines(spaceBefore);
 
     // Apply the configured spacing between paragraphs.
     const block = markup.makeBlock(text, {
-      ...blockOptions,
+      width,
+      indent,
       align: defaultAlign(align),
       spaceBetween: spacing,
     });

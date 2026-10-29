@@ -60,7 +60,6 @@ const exampleCommandReference = (): void => {
 const exampleCustomizedReleaseNotes = (): void => {
   const doc = docLog({
     width: 64,
-    indent: 2,
     // Every title variant, replacing the configured ones.
     titles: {
       docTitle: { style: 'highlight' },

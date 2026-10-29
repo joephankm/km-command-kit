@@ -1,12 +1,6 @@
 import { parseArgs } from 'node:util';
-import { docLog } from '../../shellLog';
-import type {
-  CmdManualParams,
-  CmdOptionDef,
-  CmdParams,
-  CmdParseResult,
-  GroupedOrFlat,
-} from '../types/parseCommandTypes';
+import manualLog from '../manualLog/manualLog';
+import type { CmdOptionDef, CmdParams, CmdParseResult, GroupedOrFlat } from '../types/parseCommandTypes';
 import { toArgValues } from './argHelpers';
 
 /**
@@ -23,24 +17,16 @@ const flattenDefs = (options: GroupedOrFlat<CmdOptionDef> | undefined): Record<s
 };
 
 /**
- * Print the command's manual and end the process.
- */
-const printManual = ({ description }: CmdManualParams): never => {
-  if (description) {
-    docLog().body(description);
-  }
-
-  process.exit(0);
-};
-
-/**
  * Parse the command's input from `process.argv` into its options and arguments.
  */
 export default <const T extends CmdParams>({ options, args, argsStart = 2, manual }: T): CmdParseResult<T> => {
   const inputArgs = process.argv.slice(argsStart);
 
-  if (manual && inputArgs.includes('--help')) {
-    printManual(manual);
+  const logger = manualLog({ ...manual, options, arguments: args });
+
+  if (inputArgs.includes('--help')) {
+    logger.manual();
+    process.exit(0);
   }
 
   const { values, positionals } = parseArgs({

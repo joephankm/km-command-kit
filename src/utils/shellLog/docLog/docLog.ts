@@ -7,6 +7,7 @@ import buildBody from './buildBody';
 import buildColumns from './buildColumns';
 import buildDefinitions from './buildDefinitions';
 import buildDivider from './buildDivider';
+import buildLine from './buildLine';
 import buildList from './buildList';
 import buildTitle from './buildTitle';
 import type { DocLogSettings, DocLogStyle } from '../types/docLogTypes';
@@ -119,6 +120,11 @@ const docLog = (options: Partial<DocLogSettings> = {}) => {
      * Print formatted body text.
      */
     body: buildBody(settings, docFunctions),
+
+    /**
+     * Print a single line of text, apart from the document's spacing.
+     */
+    line: buildLine(settings, docFunctions),
 
     /**
      * Print a divider across the document width.

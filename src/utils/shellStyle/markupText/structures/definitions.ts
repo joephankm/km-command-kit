@@ -119,13 +119,16 @@ export const makeDefinitions = <AsArray extends boolean = false>(
 
     // Each label and its content sit on one line, joined by the separator.
     case 'inline': {
-      const { separator = '—', labelStyle } = options.inlineOptions ?? {};
+      const { separator = '—', gap = 1, labelStyle } = options.inlineOptions ?? {};
+      // A colon sits right after the label, any other separator one space past it; the content
+      // follows the separator after `gap` spaces.
+      const joiner = (separator === ':' ? ':' : ' ' + separator) + ' '.repeat(gap);
 
       for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
         const { label, content } = items[itemIndex]!;
         const text = typeof content === 'string' ? content : content.join(' ');
 
-        lines.pushLine((labelStyle ? labelStyle(label) : label) + ' ' + separator + ' ' + text, itemIndex);
+        lines.pushLine((labelStyle ? labelStyle(label) : label) + joiner + text, itemIndex);
       }
       break;
     }

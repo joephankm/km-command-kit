@@ -1,4 +1,5 @@
 import type { ParseArgsOptionDescriptor } from 'node:util';
+import type { CmdManualDefinition } from './manualLogTypes';
 
 /**
  * The type a value is read as.
@@ -21,14 +22,22 @@ export type CmdDefParseOptions = Omit<ParseArgsOptionDescriptor, 'type'> & {
 };
 
 /**
+ * The display options of a definition: what the manual shows for it.
+ */
+export type CmdDefDisplayOptions = {
+  /** The description of the argument or option, shown in the manual. */
+  description?: string;
+};
+
+/**
  * The full definition of one option of a command.
  */
-export type CmdOptionDef = Omit<CmdDefParseOptions, 'position' | 'fromPosition' | 'toPosition'>;
+export type CmdOptionDef = Omit<CmdDefParseOptions, 'position' | 'fromPosition' | 'toPosition'> & CmdDefDisplayOptions;
 
 /**
  * The full definition of one argument of a command.
  */
-export type CmdArgumentDef = Omit<CmdDefParseOptions, 'multiple' | 'short'>;
+export type CmdArgumentDef = Omit<CmdDefParseOptions, 'multiple' | 'short'> & CmdDefDisplayOptions;
 
 /**
  * A set of items given flat, keyed by name, or as titled groups of such sets.
@@ -48,28 +57,6 @@ type UnionToIntersection<U> = (U extends unknown ? (value: U) => void : never) e
 export type FlattenGroups<S> = S extends readonly { items: infer R }[] ? UnionToIntersection<R> : S;
 
 /**
- * One block of the manual's Definitions section.
- */
-export type CmdManualDefinition = {
-  /** The title the block is shown under. */
-  title: string;
-  /** What the block shows. */
-  content: string;
-};
-
-/**
- * What the manual shows for a command.
- */
-export type CmdManualParams = {
-  /** What the command does, for the Description section. */
-  description?: string;
-  /** Sample calls to the command, for the Examples section. */
-  examples?: string[];
-  /** The Definitions section's blocks, in the order given, or keyed by name to customize it. */
-  definitions?: CmdManualDefinition[] | Record<string, CmdManualDefinition>;
-};
-
-/**
  * The input `parseCommand` takes, declaring the command's options and arguments.
  */
 export type CmdParams = {
@@ -80,7 +67,7 @@ export type CmdParams = {
   /** The index in `process.argv` where parsing begins. Defaults to `2`. */
   argsStart?: number;
   /** What the manual shows for the command; with no `manual`, the command has no manual. */
-  manual?: CmdManualParams;
+  manual?: Pick<CmdManualDefinition, 'description' | 'usages' | 'examples' | 'definitions'>;
 };
 
 /**

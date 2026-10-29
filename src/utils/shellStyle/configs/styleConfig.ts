@@ -57,7 +57,7 @@ export const style: Record<ShellPresetStyleName, ShellStyleCodes> = {
   title: ['1;33', '22;39'], // bold yellow
   subtitle: [90, 39], // gray
   heading: ['1;94', '22;39'], // bold bright blue
-  label: [2, 22], // dim
+  label: [33, 22], // dim
   subtle: ['2;94', '22;39'], // dim bright blue
 
   // Structural elements.

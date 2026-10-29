@@ -1,6 +1,6 @@
 import { markup } from '../../shellStyle';
 import type { DefinitionItem, MakeDefinitionsOptions } from '../../shellStyle/types/markupTypes';
-import type { DefinitionsOptions, DocLogSettings } from '../types/docLogTypes';
+import type { DefinitionsOptions, DocLogSettings, DocLogStyle } from '../types/docLogTypes';
 import type { DocLogFuncs } from './docLog';
 
 /**
@@ -21,7 +21,7 @@ type MarkupLayoutOptions = Pick<
  * Create the definitions-printing method for a document log.
  */
 export default (
-  { width, indent, rightIndent, definitionLayouts }: DocLogSettings,
+  { width, definitionLayouts }: DocLogSettings,
   { styleFuncOf, defaultAlign, startLines, endPrintLines }: DocLogFuncs
 ) => {
   // Each layout's configured options, its label style created once as a style function.
@@ -43,10 +43,19 @@ export default (
    */
   const layoutOptions = (options: LayoutOptions): MarkupLayoutOptions => {
     const layout = options.layout ?? definitionLayouts.default ?? 'stacked';
-    const config = layouts[layout];
-    const layoutOptions = options[`${layout}Options`];
+    const mergedOptions: Record<string, unknown> = { ...layouts[layout] };
+    const callOptions: Record<string, unknown> | undefined = options[`${layout}Options`];
 
-    return { layout, [`${layout}Options`]: layoutOptions ? config : { ...config, layoutOptions } };
+    if (callOptions) {
+      for (const key in callOptions) {
+        // An option the call leaves undefined keeps the configured one.
+        if (callOptions[key] === undefined) continue;
+
+        mergedOptions[key] = key === 'labelStyle' ? styleFuncOf(callOptions[key] as DocLogStyle) : callOptions[key];
+      }
+    }
+
+    return { layout, [`${layout}Options`]: mergedOptions };
   };
 
   /**
@@ -57,6 +66,7 @@ export default (
     {
       layout,
       marker,
+      indent,
       align,
       alignedOptions,
       stackedOptions,
@@ -72,7 +82,6 @@ export default (
     const block = markup.makeDefinitions(items, {
       width,
       indent,
-      rightIndent,
       align: defaultAlign(align),
       marker,
       ...layoutOptions({ layout, alignedOptions, stackedOptions, inlineOptions }),

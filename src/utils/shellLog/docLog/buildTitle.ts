@@ -19,13 +19,10 @@ const titleOptions = makeToParams<TitleOptions, 'variant'>('variant');
  * Create the title-printing method for a document log.
  */
 export default (
-  { width, indent, rightIndent, titles }: DocLogSettings,
+  { width, titles }: DocLogSettings,
   { defaultAlign, startLines, endPrintLines }: DocLogFuncs,
   divider: (options?: DividerOptions) => void
 ) => {
-  // Shared width and indents for title blocks.
-  const blockOptions = { width, indent, rightIndent };
-
   // Track numbering independently for each title variant.
   const titleCounts: Partial<Record<TitleVariantName, number>> = {};
 
@@ -33,7 +30,7 @@ export default (
    * Print a formatted title.
    */
   return (text: string, variantOrOptions: TitleVariantOrOptions) => {
-    const { numbered, dividerBefore, underline, spaceBefore, align, variant } = titleOptions(variantOrOptions);
+    const { numbered, dividerBefore, underline, spaceBefore, indent, align, variant } = titleOptions(variantOrOptions);
     const { style: titleStyle, numberMarker, underline: variantUnderline, lineFill } = titles?.[variant] ?? {};
 
     // Print a requested divider as a separate block before the title.
@@ -49,7 +46,7 @@ export default (
       text = NUMBER_STYLES[numberType](count) + marker + ' ' + text;
     }
 
-    const block = markup.makeBlock(text, { ...blockOptions, align: defaultAlign(align) });
+    const block = markup.makeBlock(text, { width, indent, align: defaultAlign(align) });
 
     lines.push(titleStyle ? markup.formatText(block, { style: titleStyle }) : block);
 
