@@ -11,9 +11,11 @@ type ArgValue = string | boolean | (string | boolean)[] | undefined;
 type ArgSlot = number | [number, number];
 
 /**
- * Resolve a slot against the number of positionals, counting a negative slot back from the end.
+ * Resolve a slot against the number of positionals.
  */
-const calcPosition = (pos: number, length: number): number => (pos < 0 ? length + pos : pos);
+const calcPosition = (pos: number, length: number): number =>
+  // A negative slot counts back from the end.
+  pos < 0 ? length + pos : pos;
 
 /**
  * Read a raw positional as the given value type.

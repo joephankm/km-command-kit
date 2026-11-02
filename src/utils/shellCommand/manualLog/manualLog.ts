@@ -18,9 +18,10 @@ export default (definition: CmdManualDefinition) => {
     ...sectionLogs,
 
     /**
-     * Print the help manual: each section of the `help` template, or of the default one, in order.
+     * Print the help manual.
      */
     manual: () => {
+      // Each section of the `help` template, or of the default one, is printed in order.
       for (const name of config.template.help ?? DEFAULT_HELP_TEMPLATE) {
         // A section with no section log yet is left out.
         if (!(name in sectionLogs)) continue;

@@ -16,16 +16,19 @@ const params = {
   },
   manual: {
     description: 'Create and run a new container from an image.',
-    usages: 'docker run [options] <image> [command]',
-    examples: [{ label: 'Detached', example: 'docker run -d nginx' }],
+    usages: '<image> [OPTIONS]',
+    examples: [
+      { label: 'Detached', example: '-d nginx' },
+      { label: 'Named', example: '--name web nginx' },
+    ],
   },
 } as const;
 
 console.log('--- without --help: parsed');
-process.argv = ['node', 'smoke', '-d', '--name', 'web', 'nginx', 'sh'];
+process.argv = [process.argv[0]!, process.argv[1]!, '-d', '--name', 'web', 'nginx', 'sh'];
 console.log(JSON.stringify(parseCommand(params)));
 
 console.log('--- with --help: the manual, then the process ends');
-process.argv = ['node', 'smoke', 'nginx', '--help'];
+process.argv = [process.argv[0]!, process.argv[1]!, 'nginx', '--help'];
 parseCommand(params);
 console.log('not reached');

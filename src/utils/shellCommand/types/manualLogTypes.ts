@@ -32,6 +32,11 @@ export type CmdManualBlockDef = {
 export type CmdManualDefinition = {
   /** What the command does, for the Description section. */
   description?: string;
+  /**
+   * The base command each usage and example is joined to, or the usage itself when there are none;
+   * `false` for none.
+   */
+  command?: string | false;
   /** Forms of calling the command, for the Usages section: one alone, all alone, or all labeled. */
   usages?: string | readonly string[] | readonly CmdManualUsage[];
   /** Sample calls to the command, for the Examples section: one alone, all alone, or all labeled. */

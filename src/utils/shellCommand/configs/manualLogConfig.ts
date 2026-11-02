@@ -11,7 +11,7 @@ import type {
 const manualLogSettings: CmdManualSettings = {
   spacing: 2,
   titleStyle: 'heading',
-  labelStyle: 'emphasize',
+  labelStyle: 'label',
   contentIndent: 2,
 };
 
@@ -55,26 +55,26 @@ const manualLogSections: CmdManualSections = {
   // usages: {},
   // commands: {},
   examples: {
-    // style: 'label',
-    // titleStyle: 'heading',
-    // labelStyle: 'heading',
+    // titleStyle: 'emphasize',
+    labelStyle: 'emphasize',
+    style: ['brightGreen'],
   },
   options: {
     layout: 'columnList',
-    // style: 'subtle',
     // titleStyle: 'heading',
     // labelStyle: 'emphasize',
+    // style: 'subtle',
   },
   arguments: {
     layout: 'definitionList',
-    // style: 'subtle',
     // titleStyle: 'heading',
     // labelStyle: 'emphasize',
+    // style: 'subtle',
   },
   definitions: {
-    // style: 'subtle',
     // titleStyle: 'heading',
     // labelStyle: 'emphasize',
+    // style: 'subtle',
   },
 };
 

@@ -82,8 +82,7 @@ type ManualPlainList = { title: string; items: string[] };
 type PrintPlainListOptions = Pick<PrintListOptions, 'section'>;
 
 /**
- * Create the layout printers of a manual log: one printing a single item, one a list, and one
- * a plain list.
+ * Create the layout printers of a manual log.
  */
 const layoutPrinter = ({ settings, sections, layouts }: LayoutPrinterParams) => {
   const doc = docLog({ spacing: settings.spacing });
@@ -107,8 +106,7 @@ const layoutPrinter = ({ settings, sections, layouts }: LayoutPrinterParams) => 
   };
 
   /**
-   * Get the options of a layout, apart from its styles: each the layout's own, or else the setting
-   * of the same name.
+   * Get the options of a layout, apart from its styles.
    */
   const getLayoutOptions = <L extends keyof CmdManualLayouts>(layout: L): LayoutOptions<L> => {
     // Start from the settings a layout inherits, then lay each of its own options over them.
@@ -128,7 +126,7 @@ const layoutPrinter = ({ settings, sections, layouts }: LayoutPrinterParams) => 
 
   return {
     /**
-     * Print one item in a single-item layout: its content alone, under its title, or after it.
+     * Print one item in a single-item layout.
      */
     printItem: ({ title, content }: ManualItem, { section, layout = 'plainText' }: PrintItemOptions) => {
       if (!content) return;
@@ -165,7 +163,7 @@ const layoutPrinter = ({ settings, sections, layouts }: LayoutPrinterParams) => 
     },
 
     /**
-     * Print a list in a multi-item layout: each item's label, with its content.
+     * Print a list in a multi-item layout, each item's label with its content.
      */
     printList: (
       { title, items }: ManualList,
@@ -233,7 +231,7 @@ const layoutPrinter = ({ settings, sections, layouts }: LayoutPrinterParams) => 
     },
 
     /**
-     * Print a list of plain items, with no structure: each item on its own line.
+     * Print a list of plain items, each on its own line.
      */
     printPlainList: ({ title, items }: ManualPlainList, { section }: PrintPlainListOptions) => {
       if (!items?.length) return;

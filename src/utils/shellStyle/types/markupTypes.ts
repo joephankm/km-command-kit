@@ -291,6 +291,10 @@ export type MakeDefinitionsOptions<AsArray extends boolean = false> = Pick<
    */
   marker?: DefinitionMarker;
   /**
+   * Style function each item is set in, its label and its content alike..
+   */
+  style?: ShellStyleFunc;
+  /**
    * Options of the `'aligned'` layout.
    */
   alignedOptions?: AlignedDefinitionOptions;

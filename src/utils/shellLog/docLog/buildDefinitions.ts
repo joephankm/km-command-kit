@@ -76,7 +76,6 @@ export default (
       spaceAfter,
     }: DefinitionsOptions = {}
   ) => {
-    const definitionsStyleFunc = styleFuncOf(style ?? 'default');
     const lines = startLines(spaceBefore);
 
     const block = markup.makeDefinitions(items, {
@@ -84,9 +83,10 @@ export default (
       indent,
       align: defaultAlign(align),
       marker,
+      style: styleFuncOf(style ?? 'default'),
       ...layoutOptions({ layout, alignedOptions, stackedOptions, inlineOptions }),
     });
-    lines.push(definitionsStyleFunc ? definitionsStyleFunc(block) : block);
+    lines.push(block);
 
     endPrintLines(lines, spaceAfter);
   };

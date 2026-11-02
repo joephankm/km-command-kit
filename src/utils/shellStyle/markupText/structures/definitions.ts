@@ -5,11 +5,18 @@ import type {
   MakeDefinitionsOptions,
   TextLines,
 } from '../../types/markupTypes';
+import type { ShellStyleFunc } from '../../types/styleTypes';
 import { makeColumns } from './columns';
 import { getListPrefixes } from './list';
 import { genLineCollector, makeBlank } from './blank';
 import { wrapText } from '../../common/textUtils';
 import { genLineWrapper, LineWrapper } from './block';
+
+/**
+ * Set text in a style function, leaving it as it is when there is no style or no text.
+ */
+const applyStyle = (text: string, styleFunc: ShellStyleFunc | undefined): string =>
+  text && styleFunc ? styleFunc(text) : text;
 
 const lineCollector = <AsArray extends boolean = false>(
   items: DefinitionItem[],
@@ -47,16 +54,20 @@ const lineCollector = <AsArray extends boolean = false>(
   return {
     pushLine: (line: string, index: number, isContentLevel = false) => {
       const wrapper = isContentLevel && contentLineWrapper ? contentLineWrapper : lineWrapper;
+
       if (options.width) {
         lines.push(
           wrapText(line, {
             width: options.width - wrapper.width(),
             align: options.align,
-            formatLine: (text, lineIndex) => (lineIndex === 0 ? wrapper.firstLine(text, index) : wrapper.line(text)),
+            formatLine: (text, lineIndex) => {
+              if (isContentLevel) text = applyStyle(text, options.style);
+              return lineIndex === 0 ? wrapper.firstLine(text, index) : wrapper.line(text);
+            },
           })
         );
       } else {
-        lines.push(wrapper.firstLine(line, index));
+        lines.push(wrapper.firstLine(isContentLevel ? applyStyle(line, options.style) : line, index));
       }
     },
     pushBlank: (count: number) => {
@@ -82,6 +93,7 @@ export const makeDefinitions = <AsArray extends boolean = false>(
   options.layout ??= 'stacked';
 
   const lines = lineCollector(items, options);
+  const { style } = options;
 
   switch (options.layout) {
     // Each label sits in a column, with its content beside it.
@@ -109,7 +121,7 @@ export const makeDefinitions = <AsArray extends boolean = false>(
         makeColumns(rows, {
           width: labelWidth ? { 0: labelWidth } : undefined,
           align: labelAlign ? { 0: labelAlign } : undefined,
-          style: labelStyle ? { 0: labelStyle } : undefined,
+          style: labelStyle ? { 0: labelStyle, 1: style, 2: style } : style,
           gap: separator ? 0 : undefined,
           asArray: true,
         })
@@ -128,7 +140,7 @@ export const makeDefinitions = <AsArray extends boolean = false>(
         const { label, content } = items[itemIndex]!;
         const text = typeof content === 'string' ? content : content.join(' ');
 
-        lines.pushLine((labelStyle ? labelStyle(label) : label) + joiner + text, itemIndex);
+        lines.pushLine(applyStyle(label, labelStyle ?? style) + applyStyle(joiner + text, style), itemIndex);
       }
       break;
     }
@@ -142,7 +154,7 @@ export const makeDefinitions = <AsArray extends boolean = false>(
 
         if (itemSpacing && itemIndex > 0) lines.pushBlank(itemSpacing);
 
-        lines.pushLine((labelStyle ? labelStyle(label) : label) + labelSuffix, itemIndex);
+        lines.pushLine(applyStyle(label, labelStyle ?? style) + applyStyle(labelSuffix, style), itemIndex);
 
         if (typeof content === 'string') {
           lines.pushLine(content, 0, true);

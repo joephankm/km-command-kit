@@ -8,6 +8,11 @@ import layoutPrinter from './layoutPrinter';
  */
 type DefGroup<D> = { title: string; items: Record<string, D> };
 
+/**
+ * One item, a list of plain items, or a list of labeled items.
+ */
+type ItemListData = string | readonly string[] | readonly Record<string, unknown>[] | undefined;
+
 type PrintGroupedListOptions<D, I extends Record<string, unknown>> = {
   /** The title the list is printed under when the definitions are given flat. */
   title: string;
@@ -39,17 +44,22 @@ type HandleItemsOptions = {
 /**
  * Create a section log, with a method to print each section of a command's manual.
  */
-export default ({ description, usages, examples, definitions, options, arguments: args }: CmdManualDefinition) => {
+export default ({
+  description,
+  command,
+  usages,
+  examples,
+  definitions,
+  options,
+  arguments: args,
+}: CmdManualDefinition) => {
   const { sections } = config;
   const { printItem, printList, printPlainList } = layoutPrinter(config);
 
   /**
    * Print one item, a list of plain items, or a list of labeled items.
    */
-  const handleItemList = (
-    data: string | readonly string[] | readonly Record<string, unknown>[] | undefined,
-    { title, section, labelField, contentField }: HandleItemsOptions
-  ) => {
+  const handleItemList = (data: ItemListData, { title, section, labelField, contentField }: HandleItemsOptions) => {
     if (!data?.length) return;
 
     const [singleTitle, pluralTitle] = typeof title === 'string' ? [title, title] : title;
@@ -70,6 +80,20 @@ export default ({ description, usages, examples, definitions, options, arguments
       { title: pluralTitle, items: data as Record<string, unknown>[] },
       { section, layout: 'definitionList', labelField, contentField }
     );
+  };
+
+  /**
+   * Join the command, when given, to one item, each plain item, or each labeled item's field.
+   */
+  const joinCommand = (data: ItemListData, field: string): ItemListData => {
+    if (!command || !data) return data;
+
+    const join = (text: string) => `${command} ${text}`;
+    if (typeof data === 'string') return join(data);
+
+    return (data as readonly (string | Record<string, unknown>)[]).map(item =>
+      typeof item === 'string' ? join(item) : { ...item, [field]: join(item[field] as string) }
+    ) as ItemListData;
   };
 
   /**
@@ -97,7 +121,7 @@ export default ({ description, usages, examples, definitions, options, arguments
 
   return {
     /**
-     * Print the Description section: what the command does.
+     * Print the Description section, describing what the command does.
      */
     description: () =>
       printItem(
@@ -106,18 +130,30 @@ export default ({ description, usages, examples, definitions, options, arguments
       ),
 
     /**
-     * Print the Usages section: the forms of a call to the command.
+     * Print the Usages section, listing the forms of a call to the command.
      */
-    usages: () => handleItemList(usages, { title: ['Usage', 'Usages'], section: 'usages', contentField: 'usage' }),
+    usages: () => {
+      // With no usages, the command is the usage, with placeholders for what it takes.
+      const fullUsages =
+        command && !usages
+          ? [command, args && '[ARGUMENTS]', options && '[OPTIONS]'].filter(Boolean).join(' ')
+          : joinCommand(usages, 'usage');
+
+      handleItemList(fullUsages, { title: ['Usage', 'Usages'], section: 'usages', contentField: 'usage' });
+    },
 
     /**
-     * Print the Examples section: sample calls to the command.
+     * Print the Examples section, listing sample calls to the command.
      */
     examples: () =>
-      handleItemList(examples, { title: ['Example', 'Examples'], section: 'examples', contentField: 'example' }),
+      handleItemList(joinCommand(examples, 'example'), {
+        title: ['Example', 'Examples'],
+        section: 'examples',
+        contentField: 'example',
+      }),
 
     /**
-     * Print the Options section: each option, with its short name and description.
+     * Print the Options section, listing each option with its short name and description.
      */
     options: () =>
       handleColumnList(options, {
@@ -132,7 +168,7 @@ export default ({ description, usages, examples, definitions, options, arguments
       }),
 
     /**
-     * Print the Arguments section: each argument, with its description.
+     * Print the Arguments section, listing each argument with its description.
      */
     arguments: () =>
       handleColumnList(args, {
@@ -142,7 +178,7 @@ export default ({ description, usages, examples, definitions, options, arguments
       }),
 
     /**
-     * Print the Definitions section: each block the command defines itself, under its label.
+     * Print the Definitions section, showing each block the command defines under its label.
      */
     definitions: () => {
       // Every block is a definition block of its own.

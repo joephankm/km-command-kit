@@ -1,4 +1,6 @@
 import { parseArgs } from 'node:util';
+import { lazeCreate } from '../common/creatorUtils';
+import envMeta from '../envMeta/envMeta';
 import manualLog from '../manualLog/manualLog';
 import type { CmdOptionDef, CmdParams, CmdParseResult, GroupedOrFlat } from '../types/parseCommandTypes';
 import { toArgValues } from './argHelpers';
@@ -22,10 +24,12 @@ const flattenDefs = (options: GroupedOrFlat<CmdOptionDef> | undefined): Record<s
 export default <const T extends CmdParams>({ options, args, argsStart = 2, manual }: T): CmdParseResult<T> => {
   const inputArgs = process.argv.slice(argsStart);
 
-  const logger = manualLog({ ...manual, options, arguments: args });
+  const logger = lazeCreate(() =>
+    manualLog({ ...manual, command: manual?.command ?? envMeta.command(), options, arguments: args })
+  );
 
   if (inputArgs.includes('--help')) {
-    logger.manual();
+    logger().manual();
     process.exit(0);
   }
 

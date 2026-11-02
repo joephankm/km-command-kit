@@ -67,7 +67,7 @@ export type CmdParams = {
   /** The index in `process.argv` where parsing begins. Defaults to `2`. */
   argsStart?: number;
   /** What the manual shows for the command; with no `manual`, the command has no manual. */
-  manual?: Pick<CmdManualDefinition, 'description' | 'usages' | 'examples' | 'definitions'>;
+  manual?: Pick<CmdManualDefinition, 'description' | 'command' | 'usages' | 'examples' | 'definitions'>;
 };
 
 /**

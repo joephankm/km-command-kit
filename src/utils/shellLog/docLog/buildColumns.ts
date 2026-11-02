@@ -25,17 +25,17 @@ export default ({ width, columnGap }: DocLogSettings, { styleFuncOf, startLines,
     const columnCount = Array.isArray(contents[0])
       ? Math.max(0, ...(contents as ColumnContent[][]).map(row => row.length))
       : contents.length;
-    const styleFuncs: Record<number, ShellStyleFunc> = {};
+    const styleFuncMap: Record<number, ShellStyleFunc> = {};
 
     for (let index = 0; index < columnCount; index++) {
       if (style[index]) {
-        styleFuncs[index] = styleFuncOf(style[index]!)!;
+        styleFuncMap[index] = styleFuncOf(style[index]!)!;
       } else if (defaultStyle) {
-        styleFuncs[index] = defaultStyle;
+        styleFuncMap[index] = defaultStyle;
       }
     }
 
-    return styleFuncs;
+    return styleFuncMap;
   };
 
   /**
